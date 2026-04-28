@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Siblings.co - Dashboard Kasir</title>
+<title>Siblings.co - Dashboard Owner</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <style>
-
-/* RESET */
 * {
   margin: 0;
   padding: 0;
@@ -21,19 +19,19 @@ body {
   background-color: #F8F3E9;
 }
 
-/* LAYOUT  */
+/* LAYOUT */
 .container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 /* SIDEBAR */
 .sidebar {
   width: 250px;
-  padding-top: 30px;
-  color: white;
   background: linear-gradient(rgba(74,51,40,0.9), rgba(74,51,40,0.9)), url('header.jpg');
   background-size: cover;
+  color: white;
+  padding-top: 30px;
 }
 
 .logo-container {
@@ -42,8 +40,8 @@ body {
 }
 
 .logo-container h2 {
-  font-size: 28px;
   font-style: italic;
+  font-size: 28px;
 }
 
 nav {
@@ -54,14 +52,15 @@ nav {
 }
 
 .nav-item {
-  display: flex;
-  gap: 12px;
+  text-decoration: none;
+  color: #4A3328;
+  background: white;
   padding: 12px 20px;
   border-radius: 30px 0 0 30px;
-  background: white;
-  color: #4A3328;
   font-weight: bold;
-  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   transition: 0.3s;
 }
 
@@ -75,40 +74,45 @@ nav {
   background-color: #E6D5B8;
 }
 
-/*  MAIN  */
+/* MAIN */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
+/* HEADER */
 .header-photo {
   height: 110px;
   background: url('header.jpg') center/cover;
   box-shadow: inset 0 0 100px rgba(0,0,0,0.2);
 }
 
-.content {
+/* CONTENT */
+.content-padding {
   flex: 1;
   padding: 30px 50px;
   display: flex;
   flex-direction: column;
 }
 
-/*  CARD ATAS */
-.cards {
+/* CARDS ATAS */
+.dashboard-cards {
   display: flex;
   gap: 25px;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .card-custom {
   flex: 1;
-  padding: 30px;
-  text-align: center;
-  background: white;
+  height: 140px;
+  background: #fff;
   border: 2px solid #4A3328;
   border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   transition: 0.3s;
 }
 
@@ -117,81 +121,64 @@ nav {
 }
 
 .card-custom h2 {
-  font-size: 32px;
+  font-size: 30px;
 }
 
 .card-custom p {
   font-size: 16px;
 }
 
-/* GRID BAWAH */
-.bottom {
+/* BAGIAN BAWAH */
+.dashboard-bottom {
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 1.5fr;
+  display: flex;
   gap: 25px;
 }
 
-/*  BOX  */
+/* BOX */
 .box {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 20px;
-  background: white;
+  flex: 1;
+  background: #fff;
   border: 2px solid #4A3328;
   border-radius: 15px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
-/* TAMBAH PESANAN */
-.add-box {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  font-size: 18px;
-}
-
-.add-box i {
-  font-size: 60px;
+.box h6 {
   margin-bottom: 10px;
-  color: #999;
+  font-size: 16px;
+  color: #4A3328;
 }
 
-/* AKTIVITAS */
-.activity h3 {
-  margin-bottom: 15px;
+.box-content {
+  flex: 1;
 }
 
-.activity p {
-  font-size: 15px;
+
+.box p {
+  font-size: 14px;
   margin-bottom: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* ANTRIAN */
-.big-box {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  font-size: 20px;
-  color: #555;
-}
 
+canvas {
+  height: 75%;
+}
 </style>
 </head>
 
 <body>
 
 <?php include 'sidebar.php'; ?>
-<?php include 'header.php'; ?>
+<?php include 'header.php' ; ?>
 
-  <div class="content">
 
-    <!-- CARD ATAS -->
-    <div class="cards">
+  <div class="content-padding">
 
+    <!-- CARDS -->
+    <div class="dashboard-cards">
       <div class="card-custom">
         <h2 id="pesananBaru">12</h2>
         <p>Pesanan Baru</p>
@@ -208,31 +195,39 @@ nav {
       </div>
 
       <div class="card-custom">
-        <h2 id="belumlunas">15</h2>
-        <p>Belum Lunas</p>
+        <h2 id="omzet">1.540.000</h2>
+        <p>Total Omzet Hari Ini</p>
       </div>
-
     </div>
 
-    <!-- BAGIAN BAWAH -->
-    <div class="bottom">
+    <!-- BAWAH -->
+    <div class="dashboard-bottom">
 
-      <div class="box add-box">
-        <i class="fas fa-plus"></i>
-        Tambah Pesanan
+      <div class="box">
+        <h6>Deadline Produksi</h6>
+        <div class="box-content">
+          <p>#102 - Ahmad (Hari ini)</p>
+          <p>#103 - Andi (Besok)</p>
+          <p>#104 - Nisa (2 hari)</p>
+        </div>
       </div>
 
-      <div class="box activity">
-        <h3>Aktivitas Terakhir</h3>
-        <p><strong>10.17</strong> Menambahkan pesanan</p>
-        <p><strong>10.50</strong> Menerima pembayaran dari Ahmad</p>
-        <p><strong>11.07</strong> Menambahkan pesanan</p>
-        <p><strong>11.26</strong> Menerima pembayaran dari SMA 2</p>
-        <p><strong>12.09</strong> Menambahkan pesanan</p>
+      <div class="box">
+        <h6>Aktivitas Terakhir</h6>
+        <div class="box-content">
+          <p>10.17 Kasir menambahkan pesanan</p>
+          <p>10.50 Pembayaran masuk</p>
+          <p>11.07 Tambah pesanan</p>
+          <p>11.26 Pembayaran masuk</p>
+          <p>12.09 Pesanan baru</p>
+        </div>
       </div>
 
-      <div class="box big-box">
-        Antrian Invoice dan Pesanan
+      <div class="box">
+        <h6 style="text-align:center;">Statistik Penjualan</h6>
+        <div class="box-content">
+          <canvas id="chart"></canvas>
+        </div>
       </div>
 
     </div>
@@ -242,6 +237,20 @@ nav {
 </div>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('chart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jersey', 'PDH', 'Kaos', 'Kemeja'],
+    datasets: [{
+      label: 'Penjualan',
+      data: [8, 12, 16, 20]
+    }]
+  }
+});
+</script>
 
 </body>
 </html>
