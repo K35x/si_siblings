@@ -1,0 +1,157 @@
+/* style_tshirt.css - VERSI TERBARU (FIX LAYOUT) */
+
+:root {
+    --primary-brown: #4A3328;
+    --secondary-beige: #F8F3E9;
+    --accent-green: #79B473;
+    --border-color: #E6D5B8;
+    --text-muted: #A39382;
+}
+
+/* 1. Layout Dasar & Judul */
+.main-title { font-size: 28px; color: var(--primary-brown); font-weight: 800; margin-bottom: 5px; }
+.btn-back-link {
+    text-decoration: none; color: var(--primary-brown);
+    font-size: 14px; font-weight: 600; display: inline-flex;
+    align-items: center; gap: 8px; margin-bottom: 20px;
+}
+
+/* 2. Grid System - UPDATE: Pakai stretch agar tinggi sama */
+.form-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; /* Pakai 1:1 supaya seimbang */
+    gap: 25px; 
+    align-items: stretch; /* Narik tinggi kanan & kiri agar sejajar */
+}
+
+/* 3. Card Styling - UPDATE: Pakai Flexbox agar konten ngikutin tinggi card */
+.form-card {
+    background: #ffffff; 
+    border-radius: 16px;
+    border: 1px solid rgba(74, 51, 40, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card-header {
+    background: var(--primary-brown); 
+    padding: 15px 25px;
+    color: var(--secondary-beige); 
+    display: flex;
+    align-items: center; 
+    gap: 12px; 
+    font-weight: 600; 
+    font-size: 15px;
+}
+
+.card-body { 
+    padding: 25px; 
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Body card akan mengisi ruang kosong */
+}
+
+/* 4. Input & Grouping */
+.input-group { margin-bottom: 20px; }
+.input-group label {
+    display: block; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 8px; letter-spacing: 0.5px;
+}
+
+.input-group select, .input-group input {
+    width: 100%; padding: 12px 16px; border-radius: 10px;
+    border: 1.5px solid var(--border-color); background: #FAFAFA;
+    font-size: 14px; color: var(--primary-brown); outline: none;
+    transition: 0.3s;
+}
+
+/* 5. Section Upload - BARU: Spacing lebih lega */
+.design-upload-section {
+    margin-top: 35px; /* Jarak dari input warna kain */
+    padding-top: 20px;
+    border-top: 2px dashed #f0f0f0;
+}
+
+.upload-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.file-input { font-size: 11px !important; flex: 1; }
+.note-input { flex: 1; padding: 8px 12px !important; font-size: 12px !important; }
+
+/* 6. Tabel Ukuran */
+/* style_tshirt.css */
+
+.size-table { 
+    width: 100%; 
+    border-collapse: collapse;
+    flex-grow: 1;
+    margin-bottom: 20px;
+    table-layout: fixed; /* Tambahkan ini supaya pembagian kolom konsisten */
+}
+
+/* Mengatur lebar kolom secara spesifik */
+.size-table th:nth-child(1), 
+.size-table td:nth-child(1) { 
+    width: 20%; /* Kolom Size (S, M, L) tidak butuh lebar banyak */
+}
+
+.size-table th:nth-child(2), 
+.size-table td:nth-child(2),
+.size-table th:nth-child(3), 
+.size-table td:nth-child(3) { 
+    width: 40%; /* Beri ruang lebih luas untuk kolom input */
+}
+
+.size-table th {
+    text-align: center; /* Header dibuat rata tengah agar simetris dengan input */
+    padding: 12px 5px;
+}
+
+.size-table td { 
+    text-align: center; 
+    padding: 15px 5px;
+}
+
+.size-table input {
+    width: 80%; /* Input akan mengikuti lebar kolom yang sudah diperluas */
+    max-width: 100px; /* Tapi jangan sampai terlalu raksasa juga */
+    padding: 10px; 
+    border-radius: 8px;
+    border: 1.5px solid var(--border-color); 
+    text-align: center; 
+    font-weight: 700;
+}
+
+/* 7. Summary Box & Button - UPDATE: Nempel di bawah */
+.order-summary-box {
+    background: #fdfaf5; padding: 20px; border-radius: 12px;
+    border: 2px dashed var(--primary-brown); 
+    margin-top: auto; /* Memaksa box ini ke paling bawah card kanan */
+}
+
+.status-row { 
+    display: flex; justify-content: space-between; 
+    margin-bottom: 8px; font-weight: 700; color: var(--primary-brown); 
+}
+
+#totalHarga { color: var(--accent-green); font-size: 22px; }
+
+.btn-primary-order {
+    background: var(--accent-green); color: white; width: 100%;
+    padding: 18px; border: none; border-radius: 12px;
+    font-weight: 700; cursor: pointer; display: flex;
+    justify-content: center; align-items: center; gap: 12px;
+    transition: 0.3s; margin-top: 15px; text-transform: uppercase;
+}
+
+.btn-primary-order:hover { background: #669e5f; transform: translateY(-2px); }
+.btn-primary-order:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.warning-text { color: #d9534f; font-size: 11px; margin-top: 8px; font-weight: bold; text-align: center; }
