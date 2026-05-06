@@ -32,7 +32,7 @@ body {
   width: 250px;
   padding-top: 30px;
   color: white;
-  background: linear-gradient(rgba(74,51,40,0.9), rgba(74,51,40,0.9)), url('header.jpg');
+  background: linear-gradient(rgba(15,6,1,0.9), rgba(74,51,40,0.9)), url('/si_siblings/public/assets/img/header.jpeg');
   background-size: cover;
 }
 
@@ -84,8 +84,9 @@ nav {
 
 .header-photo {
   height: 110px;
-  background: url('header.jpg') center/cover;
-  box-shadow: inset 0 0 100px rgba(0,0,0,0.2);
+  background: url('/si_siblings/public/assets/img/atas.jpeg');
+  width: 100%; height: 107px;
+  background-size: cover; background-position: center;
 }
 
 .content {
@@ -184,8 +185,18 @@ nav {
 
 <body>
 
-<?php include 'sidebar.php'; ?>
-<?php include 'header.php'; ?>
+<div class="container">
+        <aside class="sidebar">
+            <div class="logo-container"><h2>Siblings.co</h2></div>
+            <nav>
+                <a href="kasir.php" class="nav-item"><i class="fas fa-home"></i> Beranda</a>
+                <a href="index.php" class="nav-item active"><i class="fas fa-shopping-basket"></i> Pesanan</a>
+            </nav>
+        </aside>
+<!-- MAIN -->
+<div class="main-content">
+
+  <div class="header-photo"></div>
 
   <div class="content">
 
