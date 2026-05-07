@@ -13,7 +13,7 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            background-color: #f7e9d5; /* Warna krem sesuai desain */
+            background-color: #f7e9d5; 
             overflow: hidden;
         }
 
@@ -22,9 +22,9 @@
             display: flex;
         }
 
-        /* --- PERUBAHAN DI SINI: MENGGUNAKAN FOTO SEBAGAI BACKGROUND --- */
+      
         .brand-section {
-            /* Mengambil foto tekstur cokelat tua yang kamu kirim */
+            
             background-image: url('/si_siblings/public/assets/img/background.jpeg'); 
             background-size: cover;
             background-position: center;
@@ -37,7 +37,6 @@
             position: relative;
         }
 
-        /* Opsional: Menambah lapisan gelap tipis agar logo lebih menonjol */
         .brand-section::before {
             content: "";
             position: absolute;
@@ -49,11 +48,11 @@
             width: 70%;
             max-width: 350px;
             height: auto;
-            position: relative; /* Agar logo berada di atas lapisan overlay */
+            position: relative; 
             filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
-        /* --- SISI KANAN TETAP SAMA --- */
+      
         .login-section {
             display: flex;
             justify-content: center;
@@ -63,7 +62,7 @@
         }
 
         .login-card {
-            background-color: #3C2317; /* Kotak cokelat form */
+            background-color: #3C2317; 
             color: white;
             padding: 40px;
             border-radius: 40px;
@@ -169,7 +168,7 @@
     </div>
 
     <script>
-        // Script untuk toggle buka/tutup mata pada password
+       
         const togglePassword = document.querySelector('.toggle-password');
         const passwordInput = document.querySelector('#password');
 
