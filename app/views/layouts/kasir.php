@@ -29,11 +29,10 @@ body {
 
 /* SIDEBAR */
 .sidebar {
-  width: 250px;
-  padding-top: 30px;
-  color: white;
-  background: linear-gradient(rgba(15,6,1,0.9), rgba(74,51,40,0.9)), url('/si_siblings/public/assets/img/header.jpeg');
-  background-size: cover;
+    width: 250px;
+    background-image: linear-gradient(rgba(15, 6, 1, 0.9), rgba(74, 51, 40, 0.9)), url('/si_siblings/public/assets/img/background.jpeg'); 
+    background-size: cover; background-position: center;
+    color: white; flex-shrink: 0; padding-top: 30px;
 }
 
 .logo-container {
@@ -84,7 +83,7 @@ nav {
 
 .header-photo {
   height: 110px;
-  background: url('/si_siblings/public/assets/img/atas.jpeg');
+  background: url('/si_siblings/public/assets/img/background.jpeg');
   width: 100%; height: 107px;
   background-size: cover; background-position: center;
 }
@@ -190,9 +189,10 @@ nav {
             <div class="logo-container"><h2>Siblings.co</h2></div>
             <nav>
                 <a href="kasir.php" class="nav-item"><i class="fas fa-home"></i> Beranda</a>
-                <a href="index.php" class="nav-item active"><i class="fas fa-shopping-basket"></i> Pesanan</a>
+                <a href="si_siblings/app/views/transaction/index.php" class="nav-item"><i class="fas fa-shopping-basket"></i> Pesanan</a>
             </nav>
         </aside>
+
 <!-- MAIN -->
 <div class="main-content">
 
