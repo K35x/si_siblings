@@ -4,35 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - Siblings.co</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* --- LAYOUT DASAR --- */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #F8F3E9; }
-        .container { display: flex; min-height: 100vh; }
-
-        /* --- SIDEBAR --- */
-        .sidebar {
-            width: 260px; background-image: linear-gradient(rgba(15, 6, 1, 0.9), rgba(74, 51, 40, 0.9)), url('header.jpeg');
-            background-size: cover; background-position: center; color: white; padding-top: 30px; flex-shrink: 0;
-        }
-        .logo-container { padding: 0 25px; margin-bottom: 40px; }
-        .logo-container h2 { font-style: italic; font-size: 28px; }
-
-        nav { display: flex; flex-direction: column; gap: 12px; padding-left: 20px; }
-        .nav-item {
-            text-decoration: none; color: #4A3328; background: white; padding: 12px 20px;
-            border-radius: 30px 0 0 30px; font-weight: bold; display: flex; align-items: center; gap: 12px;
-            transition: all 0.3s ease;
-        }
-        .nav-item:hover { background-color: #79B473; color: white; transform: scale(1.05); padding-left: 30px; }
-        .nav-item.active { background-color: #E6D5B8; color: #4A3328; }
-
-        /* --- CONTENT AREA --- */
-        .main-content { flex: 1; display: flex; flex-direction: column; }
-        .header-photo { width: 100%; height: 110px; background-image: url('header.jpeg'); background-size: cover; background-position: center; }
-        .content-padding { padding: 40px; }
-
         /* --- INVOICE CARD --- */
         .invoice-card {
             background: white; border-radius: 15px; border: 1.5px solid #4A3328;
@@ -78,18 +52,9 @@
 </head>
 <body>
     <div class="container">
-        <aside class="sidebar">
-            <div class="logo-container"><h2>Siblings.co</h2></div>
-            <nav>
-                <a href="#" class="nav-item"><i class="fas fa-home"></i> Beranda</a>
-                <a href="#" class="nav-item active"><i class="fas fa-shopping-basket"></i> Pesanan</a>
-                <a href="#" class="nav-item"><i class="fas fa-box"></i> Stok Barang</a>
-                <a href="#" class="nav-item"><i class="fas fa-money-bill"></i> Keuangan</a>
-            </nav>
-        </aside>
-
+        <?php include('includes/sidebar.php'); ?>
         <main class="main-content">
-            <div class="header-photo"></div>
+            <?php include('includes/header.php'); ?>
             <div class="content-padding">
                 <div class="invoice-card">
                     <div class="invoice-header">
