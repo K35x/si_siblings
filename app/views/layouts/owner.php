@@ -27,11 +27,10 @@ body {
 
 /* SIDEBAR */
 .sidebar {
-  width: 250px;
-  background: linear-gradient(rgba(15,6,1,0.9), rgba(74,51,40,0.9)), url('/si_siblings/public/assets/img/header.jpeg');
-  background-size: cover;
-  color: white;
-  padding-top: 30px;
+    width: 250px;
+    background-image: linear-gradient(rgba(15, 6, 1, 0.9), rgba(74, 51, 40, 0.9)), url('/si_siblings/public/assets/img/background.jpeg'); 
+    background-size: cover; background-position: center;
+    color: white; flex-shrink: 0; padding-top: 30px;
 }
 
 .logo-container {
@@ -84,12 +83,10 @@ nav {
 /* HEADER */
 .header-photo {
   height: 110px;
-  background: url('/si_siblings/public/assets/img/atas.jpeg');
+  background: url('/si_siblings/public/assets/img/background.jpeg');
   width: 100%; height: 107px;
   background-size: cover; background-position: center; 
 }
-  
-
 
 /* CONTENT */
 .content-padding {
@@ -159,12 +156,10 @@ nav {
   flex: 1;
 }
 
-
 .box p {
   font-size: 14px;
   margin-bottom: 8px;
 }
-
 
 canvas {
   height: 75%;
@@ -179,8 +174,8 @@ canvas {
             <div class="logo-container"><h2>Siblings.co</h2></div>
             <nav>
                 <a href="owner.php" class="nav-item"><i class="fas fa-home"></i> Beranda</a>
-                <a href="index.php" class="nav-item active"><i class="fas fa-shopping-basket"></i> Pesanan</a>
-                <a href="index.php" class="nav-item"><i class="fas fa-box"></i> Stok produk</a>
+                <a href="index.php" class="nav-item"><i class="fas fa-shopping-basket"></i> Pesanan</a>
+                <a href="product/index.php" class="nav-item"><i class="fas fa-box"></i> Stok produk</a>
                 <a href="#" class="nav-item"><i class="fas fa-money-bill"></i> Penjualan</a>
             </nav>
         </aside>
@@ -188,7 +183,6 @@ canvas {
 <div class="main-content">
 
   <div class="header-photo"></div>
-
 
   <div class="content-padding">
 

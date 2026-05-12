@@ -16,7 +16,7 @@
             <div class="logo-container"><h2>Siblings.co</h2></div>
             <nav>
                 <a href="owner.php" class="nav-item"><i class="fas fa-home"></i> Beranda</a>
-                <a href="index.php" class="nav-item active"><i class="fas fa-shopping-basket"></i> Pesanan</a>
+                <a href="index.php" class="nav-item"><i class="fas fa-shopping-basket"></i> Pesanan</a>
                 <a href="index.php" class="nav-item"><i class="fas fa-box"></i> Stok produk</a>
                 <a href="#" class="nav-item"><i class="fas fa-money-bill"></i> Penjualan</a>
             </nav>
