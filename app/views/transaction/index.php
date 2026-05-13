@@ -7,15 +7,15 @@
     <!-- Icon & Font -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- CSS Utama -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>">
 </head>
 <body>
 
     <div class="container">
-        <?php include('includes/sidebar.php'); ?>
+        <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
         <main class="main-content">
-            <?php include('includes/header.php'); ?>
+            <?php include __DIR__ . '/includes/header.php'; ?>
 
             <div class="content-padding">
                 <h1>List Pesanan</h1>
@@ -29,7 +29,7 @@
                             <input type="text" placeholder="Cari Nama Pelanggan atau ID Pesanan...">
                         </div>
                         
-                        <a href="input_pesanan.php" class="btn-tambah" style="border-radius: 10px; padding: 12px 20px;">
+                        <a href="<?= url('/transactions/create') ?>" class="btn-tambah" style="border-radius: 10px; padding: 12px 20px;">
                             Tambah Pesanan Baru <i class="fas fa-plus"></i>
                         </a>
                     </div>

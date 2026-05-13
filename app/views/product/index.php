@@ -6,21 +6,17 @@
 <title>Siblings.co - Stok Produk</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="<?= asset('css/products.css') ?>">
 </head>
 <body>
 
 
 <div class="container">
-        <aside class="sidebar">
-            <div class="logo-container"><h2>Siblings.co</h2></div>
-            <nav>
-                <a href="owner.php" class="nav-item"><i class="fas fa-home"></i> Beranda</a>
-                <a href="index.php" class="nav-item"><i class="fas fa-shopping-basket"></i> Pesanan</a>
-                <a href="index.php" class="nav-item"><i class="fas fa-box"></i> Stok produk</a>
-                <a href="#" class="nav-item"><i class="fas fa-money-bill"></i> Penjualan</a>
-            </nav>
-        </aside>
+<?php
+$sidebarRole = 'owner';
+$activeMenu = 'products';
+include __DIR__ . '/../layouts/sidebar.php';
+?>
 
 <!-- MAIN -->
 <div class="main-content">

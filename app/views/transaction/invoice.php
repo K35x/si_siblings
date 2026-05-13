@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - Siblings.co</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* --- INVOICE CARD --- */
@@ -52,9 +52,9 @@
 </head>
 <body>
     <div class="container">
-        <?php include('includes/sidebar.php'); ?>
+        <?php include __DIR__ . '/includes/sidebar.php'; ?>
         <main class="main-content">
-            <?php include('includes/header.php'); ?>
+            <?php include __DIR__ . '/includes/header.php'; ?>
             <div class="content-padding">
                 <div class="invoice-card">
                     <div class="invoice-header">
@@ -125,7 +125,7 @@
 
                 <div class="action-btns">
                     <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> Simpan PDF</button>
-                    <a href="#" style="text-decoration: none; color: #4A3328; font-weight: bold; font-size: 14px; align-self: center;">Selesai</a>
+                    <a href="<?= url('/transactions') ?>" style="text-decoration: none; color: #4A3328; font-weight: bold; font-size: 14px; align-self: center;">Selesai</a>
                 </div>
             </div>
         </main>
