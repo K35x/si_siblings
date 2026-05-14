@@ -2,19 +2,16 @@
 
 class TransactionController extends Controller
 {
-    private TransactionModel $transactions;
-
-    public function __construct()
-    {
-        $this->transactions = new TransactionModel();
-    }
+    private ?TransactionModel $transactions = null;
 
     public function index(): void
     {
+        $sidebarRole = $this->resolveSidebarRole();
+
         $this->view('transaction.index', [
-            'sidebarRole' => $_GET['role'] ?? 'kasir',
-            'activeMenu' => 'orders',
-            'transactions' => $this->transactions->all(),
+            'sidebarRole' => $sidebarRole,
+            'activeMenu' => 'status',
+            'transactions' => $this->transactions()->all(),
         ]);
     }
 
@@ -86,5 +83,22 @@ class TransactionController extends Controller
             'sidebarRole' => 'kasir',
             'activeMenu' => 'orders',
         ]);
+    }
+
+    private function transactions(): TransactionModel
+    {
+        if ($this->transactions === null) {
+            $this->transactions = new TransactionModel();
+        }
+
+        return $this->transactions;
+    }
+
+    private function resolveSidebarRole(): string
+    {
+        $sessionRole = (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['role'])) ? $_SESSION['role'] : null;
+        $role = $_GET['role'] ?? $sessionRole ?? 'kasir';
+
+        return in_array($role, ['kasir', 'owner'], true) ? $role : 'kasir';
     }
 }

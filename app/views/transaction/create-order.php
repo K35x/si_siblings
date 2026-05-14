@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>?v=1.3">
 </head>
-</head>
 <body>
     <div class="container">
         <!-- Sidebar -->
@@ -19,7 +18,7 @@
 
             <div class="content-padding">
                 <a href="<?= url('/transactions') ?>" class="btn-back" style="text-decoration: none; color: #4A3328; font-weight: bold; display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                    <i class="fas fa-arrow-left"></i> Kembali
+                    <i class="fas fa-arrow-left"></i> Kembali ke Status Pesanan
                 </a>
 
                 <h1 style="margin-bottom: 5px;">Tambah Pesanan Baru</h1>

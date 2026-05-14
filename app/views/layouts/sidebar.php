@@ -16,7 +16,7 @@ $menus = [
             'key' => 'orders',
             'label' => 'Pesanan',
             'icon' => 'fas fa-shopping-basket',
-            'url' => ($baseUrl ?: '') . '/transactions',
+            'url' => ($baseUrl ?: '') . '/transactions/create',
         ],
         [
             'key' => 'cart',
@@ -39,7 +39,7 @@ $menus = [
             'url' => ($baseUrl ?: '') . '/owner',
         ],
         [
-            'key' => 'orders',
+            'key' => 'status',
             'label' => 'Status Pesanan',
             'icon' => 'fas fa-shopping-basket',
             'url' => ($baseUrl ?: '') . '/transactions?role=owner',
@@ -78,11 +78,12 @@ if ($currentMenu === '') {
 
     $currentMenu = match ($currentPath) {
         '/kasir', '/owner' => 'dashboard',
+        '/transactions/create', '/transactions/categories' => 'orders',
         '/transactions/cart' => 'cart',
         '/transactions/invoice' => 'invoice',
         '/products' => 'products',
         '/finance' => 'finance',
-        default => str_starts_with($currentPath, '/transactions') ? 'orders' : '',
+        default => str_starts_with($currentPath, '/transactions') ? 'status' : '',
     };
 }
 ?>
