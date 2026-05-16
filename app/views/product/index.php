@@ -84,8 +84,7 @@ include __DIR__ . '/../layouts/sidebar.php';
           <small>100pcs Kaos Putih Uk.s</small>
         </div>
       </div>
-      
-
+    
     </div>
   </div>
 
@@ -98,7 +97,7 @@ include __DIR__ . '/../layouts/sidebar.php';
   <div class="right-header">
 
   <div class="header-left">
-    <h3>📦 Stok Barang</h3>
+    <h3><i class="fas fa-box"></i> Stok Barang</h3>
   </div>
 
   <div class="header-actions">
@@ -134,29 +133,29 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Cotton Combed 24s</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
         <div class="kain">
           <div class="kain-title">Cotton Carded</div>
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+           <div class="ukuran-row"><span>S</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
         <div class="kain">
           <div class="kain-title">Semi Cotton</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
 
@@ -175,29 +174,29 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">American Drill</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
         <div class="kain">
           <div class="kain-title">Union</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
         <div class="kain">
           <div class="kain-title">Nagata Drill</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+           <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
       </div>
@@ -215,29 +214,29 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Dryfit</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
         <div class="kain">
           <div class="kain-title">Embos</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+           <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
         <div class="kain">
           <div class="kain-title">Jaquard</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
       </div>
@@ -255,20 +254,20 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Premium Cotton 24s</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
         <div class="kain">
           <div class="kain-title">Lacoste 24s</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
       </div>
@@ -286,11 +285,11 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Semi Cotton</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
 
       </div>
@@ -308,11 +307,11 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Custom</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
         </div>
       </div>
 
@@ -488,8 +487,8 @@ function tambahProduk() {
       <span>${ukuran}</span>
       <span>${stok} pcs</span>
       <div class="aksi">
-        <button>✏️</button>
-        <button>🗑️</button>
+        <button class="btn-edit"><i class="fas fa-pen"></i></button>
+        <button class="btn-delete"><i class="fas fa-trash"></i></button>
       </div>
     </div>
   `);
@@ -506,7 +505,7 @@ function tambahProduk() {
 // EDIT INLINE
 document.addEventListener("click", function (e) {
 
-  if (e.target.textContent === "✏️") {
+  if (e.target.closest (".btn-edit")) {
 
     const row = e.target.closest(".ukuran-row");
     const stokEl = row.children[1];
@@ -534,7 +533,7 @@ document.addEventListener("click", function (e) {
 // HAPUS INLINE
 document.addEventListener("click", function (e) {
 
-  if (e.target.textContent === "🗑️") {
+  if (e.target.closest(".btn-delete")) {
 
     const row = e.target.closest(".ukuran-row");
     const kain = row.closest(".kain");
