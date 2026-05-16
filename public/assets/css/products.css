@@ -16,12 +16,28 @@ body {
   min-height: 100vh;
 }
 
+.finance-title {
+    color: #4A3328;
+    font-weight: 900;
+    margin-bottom: 25px;
+}
+
 /* SIDEBAR */
 .sidebar {
-    width: 250px;
-    background-image: linear-gradient(rgba(15, 6, 1, 0.9), rgba(74, 51, 40, 0.9)), url('../img/background.jpeg'); 
-    background-size: cover; background-position: center;
-    color: white; flex-shrink: 0; padding-top: 30px;
+  width: 250px;
+  height: 100vh;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 30px;
+  color: white;
+  background-image: linear-gradient(
+      rgba(15, 6, 1, 0.9),
+      rgba(74, 51, 40, 0.9)
+    ),
+    url('../img/background.jpeg');
+  background-size: cover;
+  background-position: center;
 }
 
 .logo-container {
@@ -61,6 +77,31 @@ nav {
 
 .nav-item.active {
   background-color: #E6D5B8;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 15px;
+  padding-left: 20px;
+  min-height: 0;
+}
+
+.nav-item:last-child {
+  margin-top: auto;
+  margin-bottom: 20px;
+  margin-right: 20px;
+  border-radius: 30px;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
+  color: white;
+}
+
+.nav-item:last-child:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 /* MAIN */
@@ -132,7 +173,7 @@ nav {
   overflow-y: auto;
 }
 
-/* HEADER (FIX DI ATAS) */
+/* HEADER */
 .activity-header {
   display: flex;
   justify-content: space-between;
