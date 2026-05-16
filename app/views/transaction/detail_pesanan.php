@@ -22,7 +22,6 @@ $catatan = "1. Messi (No. 10) - Size L (Pendek)\n2. Ronaldo (No. 7) - Size M (Pa
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style_tshirt.css">
     <style>
-        /* CSS internal bawaan kamu tetap aman */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #F8F3E9; }
         .container { display: flex; min-height: 100vh; }
