@@ -32,12 +32,8 @@ body {
   flex-direction: column;
   padding-top: 30px;
   color: white;
-<<<<<<< Updated upstream
   background-image:
     linear-gradient(
-=======
-  background-image: linear-gradient(
->>>>>>> Stashed changes
       rgba(15, 6, 1, 0.9),
       rgba(74, 51, 40, 0.9)
     ),
@@ -90,18 +86,6 @@ nav {
   background-color: #E6D5B8;
 }
 
-<<<<<<< Updated upstream
-=======
-.sidebar nav {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 15px;
-  padding-left: 20px;
-  min-height: 0;
-}
-
->>>>>>> Stashed changes
 .nav-item:last-child {
   margin-top: auto;
   margin-bottom: 20px;
@@ -118,11 +102,7 @@ nav {
   color: white;
 }
 
-<<<<<<< Updated upstream
-/* MAIN */
-=======
 /*  MAIN  */
->>>>>>> Stashed changes
 .main-content {
   flex: 1;
   display: flex;
@@ -241,7 +221,6 @@ nav {
   color: #777777;
 }
 
-<<<<<<< Updated upstream
 .btn-add-order {
   margin-top: 10px;
   background: #4A3328;
@@ -503,87 +482,6 @@ nav {
 }
 
 /* MODAL AKTIVITAS */
-=======
-/* AKTIVITAS */
-.activity-card {
-  background: #ffffff;
-  border: 2px solid #4A3328;
-  border-radius: 15px;
-  padding: 20px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.activity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.activity-header h3 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #4A3328;
-}
-
-.btn-view-all {
-  background: transparent;
-  border: 1px dashed #4A3328;
-  color: #4A3328;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.btn-view-all:hover {
-  background: #4A3328;
-  color: #ffffff;
-}
-
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f1e6db;
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-time {
-  min-width: 55px;
-  font-weight: 700;
-  color: #4A3328;
-  font-size: 14px;
-}
-
-.activity-text {
-  flex: 1;
-  font-size: 14px;
-  color: #555;
-  line-height: 1.4;
-}
-
-/* ==================================================
-   MODAL AKTIVITAS
-================================================== */
-
->>>>>>> Stashed changes
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -592,7 +490,6 @@ nav {
   height: 100%;
   background: rgba(0, 0, 0, 0.45);
   display: none;
-<<<<<<< Updated upstream
   justify-content: center;
   align-items: center;
   z-index: 9999;
@@ -682,103 +579,4 @@ nav {
 
 .btn-close:hover {
   opacity: 0.9;
-=======
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.modal-overlay.show {
-  display: flex;
-}
-
-.activity-modal {
-  width: 90%;
-  max-width: 850px;
-  background: #ffffff;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 25px;
-  border-bottom: 1px solid #eeeeee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #4A3328;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 34px;
-  line-height: 1;
-  cursor: pointer;
-  color: #555555;
-}
-
-.modal-close:hover {
-  color: #000000;
-}
-
-.modal-body {
-  padding: 20px 25px;
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-.activity-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.activity-table th,
-.activity-table td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.activity-table th {
-  background: #F8F3E9;
-  color: #4A3328;
-  font-weight: 700;
-}
-
-.modal-footer {
-  padding: 20px 25px;
-  display: flex;
-  justify-content: flex-end;
-  border-top: 1px solid #eeeeee;
-}
-
-.btn-close {
-  background: #4A3328;
-  color: #ffffff;
-  border: none;
-  padding: 10px 22px;
-  border-radius: 30px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-close:hover {
-  opacity: 0.9;
-}
-/* ANTRIAN */
-.big-box {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  font-size: 20px;
-  color: #555;
->>>>>>> Stashed changes
 }
