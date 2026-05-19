@@ -49,11 +49,6 @@ $data_lama = ($edit_index !== "") ? $_SESSION['keranjang'][$edit_index] : null;
                                     </select>
                                 </div>
 
-                                <div class="input-group">
-                                    <label>Warna Kain PDH</label>
-                                    <input type="text" name="warna_kain" value="<?php echo $data_lama['warna'] ?? ''; ?>" required placeholder="Misal: Hitam / Marun">
-                                </div>
-
                                 <div class="design-upload-section">
                                     <div class="card-header" style="background: #6d4c41; color: white; margin: 0 -20px 15px -20px; padding: 8px 20px; font-size: 0.9em;">
                                         <i class="fas fa-image"></i> Upload Referensi Desain
@@ -87,39 +82,42 @@ $data_lama = ($edit_index !== "") ? $_SESSION['keranjang'][$edit_index] : null;
                                 <table class="size-table">
                                     <thead>
                                         <tr>
-                                            <th>Size</th>
-                                            <th>Lengan Standar</th>
-                                            <th>Lengan Copotan (+12k)</th>
+                                            <th style="width: 15%;">Size</th>
+                                            <th style="width: 20%;">Jumlah Qty</th>
+                                            <th style="width: 65%;">Keterangan Warna Berbeda</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 6px 10px;">
+                                                <span class="section-label-lengan">LENGAN PENDEK</span>
+                                            </td>
+                                        </tr>
                                         <?php 
                                         $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                         foreach($sizes as $sz): 
-                                            // Hanya XXL yang kena extra 10k (diatas XL)
-                                            $isBigSize = ($sz == 'XXL') ? 'data-extra="10000"' : 'data-extra="0"';
+                                            $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
                                         ?>
                                         <tr>
-                                            <td>
-                                                <strong><?php echo $sz; ?></strong>
-                                                <?php if($sz == 'XXL'): ?>
-                                                    <br><small style="color: #d32f2f;">(+10k Big Size)</small>
-                                                <?php endif; ?>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
+                                            <td><input type="number" name="qty_short_<?php echo $sz; ?>" class="qty-input short" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_short_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> pendek..."></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 15px 10px 6px 10px;">
+                                                <span class="section-label-lengan" style="background: #a39382;"> LENGAN PANJANG (+10K)</span>
                                             </td>
-                                            <td>
-                                                <input type="number" name="qty_std_<?php echo $sz; ?>" 
-                                                       class="qty-input pdh-qty std" 
-                                                       min="0" value="<?php echo $data_lama['rincian_std'][$sz] ?? 0; ?>" 
-                                                       <?php echo $isBigSize; ?> 
-                                                       onchange="calculateTotalPDH()">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="qty_cpt_<?php echo $sz; ?>" 
-                                                       class="qty-input pdh-qty cpt" 
-                                                       min="0" value="<?php echo $data_lama['rincian_cpt'][$sz] ?? 0; ?>" 
-                                                       <?php echo $isBigSize; ?> 
-                                                       onchange="calculateTotalPDH()">
-                                            </td>
+                                        </tr>
+                                        <?php 
+                                        foreach($sizes as $sz): 
+                                            $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
+                                        ?>
+                                        <tr>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
+                                            <td><input type="number" name="qty_long_<?php echo $sz; ?>" class="qty-input long" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_long_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> panjang..."></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
