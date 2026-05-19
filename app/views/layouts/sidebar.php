@@ -30,6 +30,12 @@ $menus = [
             'icon' => 'fas fa-tasks',
             'url' => ($baseUrl ?: '') . '/transactions',
         ],
+        [
+            'key' => 'logout',
+            'label' => 'Logout',
+            'icon' => 'fas fa-sign-out-alt',
+            'url' => ($baseUrl ?: '') . '/logout',
+        ],
     ],
     'owner' => [
         [
@@ -55,6 +61,12 @@ $menus = [
             'label' => 'Keuangan',
             'icon' => 'fas fa-money-bill',
             'url' => ($baseUrl ?: '') . '/finance',
+        ],
+        [
+            'key' => 'logout',
+            'label' => 'Logout',
+            'icon' => 'fas fa-sign-out-alt',
+            'url' => ($baseUrl ?: '') . '/logout',
         ],
     ],
 ];
