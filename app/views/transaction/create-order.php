@@ -38,11 +38,11 @@
                             <div class="form-group-custom">
                                 <label>No. HP / WhatsApp</label>
                                 <input type="tel"
-                                 name="no_hp" 
-                                 placeholder="Contoh: 081234567890" 
-                                 pattern="[0-9]{10,13}"
-                                 title="Nomor HP harus berupa angka dan berjumlah 10-13 digit"
-                                 required>
+                                name="no_hp" 
+                                placeholder="Contoh: 081234567890" 
+                                pattern="[0-9]{10,13}"
+                                title="Nomor HP harus berupa angka dan berjumlah 10-13 digit"
+                                required>
                             </div>
 
                             <!-- Kolom Kiri -->

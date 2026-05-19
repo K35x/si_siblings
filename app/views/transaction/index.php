@@ -184,7 +184,7 @@
                                         $transaction["order_code"],
                                     ) ?></strong></p>
                                     <p>Nama Pelanggan: <strong><?= $escape(
-                                        $transaction["customer_name"],
+                                        $transaction["nama"],
                                     ) ?></strong></p>
                                     <p>Tanggal Order: <strong><?= $escape(
                                         $formatDate(

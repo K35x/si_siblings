@@ -1,47 +1,198 @@
 <?php
 session_start();
 
-// Simulasi harga per pcs
-$harga_per_pcs = 60000; 
+// =========================
+// HARGA PER PCS
+// =========================
+$harga_per_pcs = 60000;
 
-// 1. Logika Hapus Item (Taruh di paling atas sebelum HTML)
+
+// =========================
+// ROUTE CATEGORY
+// =========================
+function getCategoryRoute($kategori)
+{
+    return match ($kategori) {
+
+        'T-Shirt / Kaos'        => '/transactions/form/tshirt',
+        'Jersey'         => '/transactions/form/jersey',
+        'Polo Shirt'     => '/transactions/form/poloshirt',
+        'Seragam Olahraga' => '/transactions/form/seragamolahraga',
+        'PDH / Kemeja'   => '/transactions/form/pdh',
+        'Jacket & Hoodie'         => '/transactions/form/jackethoodie',
+
+        default          => '/transactions/categories',
+    };
+}
+
+
+// =========================
+// HAPUS ITEM
+// =========================
 if (isset($_GET['hapus'])) {
+
     $id = $_GET['hapus'];
+
     if (isset($_SESSION['keranjang'][$id])) {
         unset($_SESSION['keranjang'][$id]);
-        $_SESSION['keranjang'] = array_values($_SESSION['keranjang']); // Reset nomor index
+
+        $_SESSION['keranjang'] = array_values($_SESSION['keranjang']);
     }
+
     header('Location: ' . url('/transactions/cart'));
     exit();
 }
 
-// 2. Logika Simpan / Update Data
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $s   = (int)($_POST['qty_short_S'] ?? 0) + (int)($_POST['qty_long_S'] ?? 0);
-    $m   = (int)($_POST['qty_short_M'] ?? 0) + (int)($_POST['qty_long_M'] ?? 0);
-    $l   = (int)($_POST['qty_short_L'] ?? 0) + (int)($_POST['qty_long_L'] ?? 0);
-    $xl  = (int)($_POST['qty_short_XL'] ?? 0) + (int)($_POST['qty_long_XL'] ?? 0);
-    $xxl = (int)($_POST['qty_short_XXL'] ?? 0) + (int)($_POST['qty_long_XXL'] ?? 0);
 
+// =========================
+// EDIT ITEM
+// =========================
+if (isset($_GET['edit'])) {
+
+    $id = $_GET['edit'];
+
+    if (isset($_SESSION['keranjang'][$id])) {
+
+        $item = $_SESSION['keranjang'][$id];
+
+        $_SESSION['edit_item'] = $item;
+        $_SESSION['edit_index'] = $id;
+
+        $redirect = getCategoryRoute($item['kategori']);
+
+        header('Location: ' . url($redirect));
+        exit();
+    }
+}
+
+
+// =========================
+// SIMPAN / UPDATE ITEM
+// =========================
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+    $kategori = $_POST['kategori'] ?? '';
+
+    // =========================================
+    // KHUSUS PDH / KEMEJA
+    // =========================================
+    if ($kategori == 'PDH / Kemeja') {
+
+        $s   = (int)($_POST['qty_std_S'] ?? 0) + (int)($_POST['qty_cpt_S'] ?? 0);
+
+        $m   = (int)($_POST['qty_std_M'] ?? 0) + (int)($_POST['qty_cpt_M'] ?? 0);
+
+        $l   = (int)($_POST['qty_std_L'] ?? 0) + (int)($_POST['qty_cpt_L'] ?? 0);
+
+        $xl  = (int)($_POST['qty_std_XL'] ?? 0) + (int)($_POST['qty_cpt_XL'] ?? 0);
+
+        $xxl = (int)($_POST['qty_std_XXL'] ?? 0) + (int)($_POST['qty_cpt_XXL'] ?? 0);
+
+    } else {
+
+        // =========================================
+        // CATEGORY NORMAL
+        // =========================================
+        $s   = (int)($_POST['qty_short_S'] ?? 0) + (int)($_POST['qty_long_S'] ?? 0);
+
+        $m   = (int)($_POST['qty_short_M'] ?? 0) + (int)($_POST['qty_long_M'] ?? 0);
+
+        $l   = (int)($_POST['qty_short_L'] ?? 0) + (int)($_POST['qty_long_L'] ?? 0);
+
+        $xl  = (int)($_POST['qty_short_XL'] ?? 0) + (int)($_POST['qty_long_XL'] ?? 0);
+
+        $xxl = (int)($_POST['qty_short_XXL'] ?? 0) + (int)($_POST['qty_long_XXL'] ?? 0);
+    }
+
+
+    // =========================================
+    // TOTAL
+    // =========================================
     $total_qty = $s + $m + $l + $xl + $xxl;
+
     $total_harga = $total_qty * $harga_per_pcs;
 
+
+    // =========================================
+    // DATA ITEM
+    // =========================================
     $item_baru = [
-        'kategori' => 'T-Shirt',
-        'bahan'    => $_POST['jenis_bahan'] ?? '-',
-        'warna'    => $_POST['warna_kain'] ?? '-',
-        'sablon'   => $_POST['jenis_sablon'] ?? '-',
-        'rincian'  => ['S' => $s, 'M' => $m, 'L' => $l, 'XL' => $xl, 'XXL' => $xxl],
-        'qty'      => $total_qty,
-        'harga'    => $total_harga
+
+        'kategori' => $_POST['kategori'] ?? '-',
+
+        'bahan'    => trim($_POST['jenis_bahan'] ?? '-'),
+
+        'warna'    => trim($_POST['warna_kain'] ?? '-'),
+
+        'sablon'   => trim($_POST['jenis_sablon'] ?? '-'),
+
+        'rincian'  => [
+
+            'S'   => $s,
+
+            'M'   => $m,
+
+            'L'   => $l,
+
+            'XL'  => $xl,
+
+            'XXL' => $xxl
+        ],
+
+        // =========================
+        // KHUSUS PDH
+        // =========================
+        'rincian_std' => [
+
+            'S'   => (int)($_POST['qty_std_S'] ?? 0),
+
+            'M'   => (int)($_POST['qty_std_M'] ?? 0),
+
+            'L'   => (int)($_POST['qty_std_L'] ?? 0),
+
+            'XL'  => (int)($_POST['qty_std_XL'] ?? 0),
+
+            'XXL' => (int)($_POST['qty_std_XXL'] ?? 0),
+        ],
+
+        'rincian_cpt' => [
+
+            'S'   => (int)($_POST['qty_cpt_S'] ?? 0),
+
+            'M'   => (int)($_POST['qty_cpt_M'] ?? 0),
+
+            'L'   => (int)($_POST['qty_cpt_L'] ?? 0),
+
+            'XL'  => (int)($_POST['qty_cpt_XL'] ?? 0),
+
+            'XXL' => (int)($_POST['qty_cpt_XXL'] ?? 0),
+        ],
+
+        'qty'   => $total_qty,
+
+        'harga' => $total_harga
     ];
 
+
+    // =========================
+    // UPDATE ITEM
+    // =========================
     if (isset($_POST['index_edit']) && $_POST['index_edit'] !== "") {
+
         $idx = $_POST['index_edit'];
         $_SESSION['keranjang'][$idx] = $item_baru;
+
+        unset($_SESSION['edit_item']);
+        unset($_SESSION['edit_index']);
+
     } else {
+
+        // =========================
+        // TAMBAH ITEM BARU
+        // =========================
         $_SESSION['keranjang'][] = $item_baru;
     }
+
     header('Location: ' . url('/transactions/cart'));
     exit();
 }
@@ -102,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     </td>
                                     <td>
                                         <div class="action-buttons">
-                                            <a href="<?= url('/transactions/form/tshirt') ?>?edit=<?php echo $index; ?>" class="btn-icon edit"><i class="fas fa-edit"></i></a>
+                                            <a href="<?= url('/transactions/cart?edit=' . $index) ?>" class="btn-icon edit"><i class="fas fa-edit"></i></a>
                                             <a href="?hapus=<?php echo $index; ?>" class="btn-icon delete" onclick="return confirm('Hapus item?')"><i class="fas fa-trash"></i></a>
                                         </div>
                                     </td>
@@ -120,11 +271,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <span>Rp <?php 
                                 $grand_total = 0;
                                 if(!empty($_SESSION['keranjang'])) {
-                                   foreach($_SESSION['keranjang'] as $item) {
-                                     $grand_total += ($item['harga'] ?? 0);
+                                foreach($_SESSION['keranjang'] as $item) {
+                                    $grand_total += ($item['harga'] ?? 0);
                                 }
-                             }
-                             echo number_format($grand_total, 0, ',', '.'); 
+                            }
+                            echo number_format($grand_total, 0, ',', '.'); 
                         ?></span>
                         </div>
                         <div class="summary-row grand-total-row">

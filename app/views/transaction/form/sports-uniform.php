@@ -1,6 +1,18 @@
 <?php
 session_start();
 ?>
+
+<form method="POST" action="<?= url('/transactions/cart') ?>">
+
+    <input type="hidden" name="kategori" value="Seragam Olahraga">
+
+<input
+    type="hidden"
+    name="index_edit"
+    value="<?= $_SESSION['edit_index'] ?? ''; ?>"
+>
+</form>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>

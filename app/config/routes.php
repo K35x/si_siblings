@@ -18,4 +18,5 @@ return [
     '/transactions/form/jackethoodie' => [TransactionController::class, 'jackethoodie'],
     '/products' => [ProductController::class, 'index'],
     '/finance' => [FinanceController::class, 'index'],
+    '/transactions/invoice' => [TransactionController::class, 'invoice'],
 ];

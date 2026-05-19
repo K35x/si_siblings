@@ -4,6 +4,19 @@ session_start();
 $edit_index = $_GET['edit'] ?? "";
 $data_lama = ($edit_index !== "") ? $_SESSION['keranjang'][$edit_index] : null;
 ?>
+
+<form method="POST" action="<?= url('/transactions/cart') ?>">
+
+    <input type="hidden" name="kategori" value="PDH / Kemeja">
+
+<input
+    type="hidden"
+    name="index_edit"
+    value="<?= $_SESSION['edit_index'] ?? ''; ?>"
+>
+
+</form>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -27,10 +40,10 @@ $data_lama = ($edit_index !== "") ? $_SESSION['keranjang'][$edit_index] : null;
                     <i class="fas fa-arrow-left"></i> Kembali ke Katalog
                 </a>
 
-                <h1 class="main-title">Konfigurasi Custom PDH</h1>
+                <h1 class="main-title">Konfigurasi Custom PDH / Kemeja</h1>
             
                 <form action="<?= url('/transactions/cart') ?>" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="kategori" value="PDH">
+                    <input type="hidden" name="kategori" value="PDH / Kemeja">
                     <input type="hidden" name="index_edit" value="<?php echo $edit_index; ?>">
 
                     <div class="form-grid">

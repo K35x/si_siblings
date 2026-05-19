@@ -1,6 +1,19 @@
 <?php
 session_start();
 ?>
+
+<form method="POST" action="<?= url('/transactions/cart') ?>">
+
+    <input type="hidden" name="kategori" value="T-Shirt / Kaos">
+
+<input
+    type="hidden"
+    name="index_edit"
+    value="<?= $_SESSION['edit_index'] ?? ''; ?>"
+>
+
+</form>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -27,6 +40,9 @@ session_start();
                 <h1 class="main-title">Konfigurasi Custom T-Shirt</h1>
             
                 <form action="<?= url('/transactions/cart') ?>" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="kategori" value="Seragam Olahraga">
+
+
                     <div class="form-grid">
     
                         <!-- Section Kiri: Produksi & Desain -->
