@@ -10,24 +10,8 @@ session_start();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/transaction-form.css') ?>">
-    <style>
-        /* Perbaikan styling kecil untuk merapikan summary */
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .status-values {
-            display: flex;
-            gap: 10px;
-            min-width: 80px;
-            justify-content: flex-end;
-        }
-    </style>
 </head>
 <body>
-
     <div class="container">
         <?php include __DIR__ . '/../includes/sidebar.php'; ?>
 
@@ -45,7 +29,6 @@ session_start();
                     <input type="hidden" name="kategori" value="Jersey">
                     
                     <div class="form-grid">
-                        <!-- Section Kiri -->
                         <div class="form-card">
                             <div class="card-header"><i class="fas fa-tshirt"></i> Spesifikasi Produk</div>
                             <div class="card-body">
@@ -63,13 +46,6 @@ session_start();
                                         <option value="100000">Jersey Non-Print (DTF/Polyflex) - Rp 100.000</option>
                                     </select>
                                 </div>
-
-                                <div class="input-group">
-                                    <label>WARNA/MOTIF JERSEY</label>
-                                    <input type="text" name="warna_kain" required placeholder="Contoh: Biru Strip Putih">
-                                </div>
-
-                                <!-- Logo 3D dipindah ke bawah Warna dan dirapikan -->
                                 <div class="input-group">
                                     <label style="display: flex; align-items: center; cursor: pointer; background: #fff8e1; padding: 12px; border-radius: 5px; border: 1px solid #ffe082; justify-content: flex-start;">
                                         <input type="checkbox" id="plusLogo3D" name="add_logo3d" value="30000" onchange="calculateTotal()" style="margin-right: 12px; transform: scale(1.2);"> 
@@ -97,40 +73,59 @@ session_start();
                                         <div class="input-group" style="margin-top: 15px;">
                                             <label><i class="fas fa-sticky-note"></i> Catatan Tambahan Pesanan</label>
                                             <textarea name="catatan_pesanan" rows="4" placeholder="Contoh: Nama di dada kanan, logo di lengan kiri, pakai furing hero, dll..." style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 10px; font-family: inherit; resize: none;"></textarea>
-</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Section Kanan -->
                         <div class="form-card">
                             <div class="card-header"><i class="fas fa-th-list"></i> Rincian Ukuran & Add-ons</div>
                             <div class="card-body">
                                 <table class="size-table">
                                     <thead>
                                         <tr>
-                                            <th>Size</th>
-                                            <th>Pendek</th>
-                                            <th>Panjang (+10k)</th>
+                                            <th style="width: 15%;">Size</th>
+                                            <th style="width: 20%;">Jumlah Qty</th>
+                                            <th style="width: 65%;">Keterangan Warna Berbeda</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 6px 10px;">
+                                                <span class="section-label-lengan">LENGAN PENDEK</span>
+                                            </td>
+                                        </tr>
                                         <?php 
                                         $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                         foreach($sizes as $sz): 
                                             $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
                                         ?>
                                         <tr>
-                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small>(+10k)</small>' : ''; ?></td>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
                                             <td><input type="number" name="qty_short_<?php echo $sz; ?>" class="qty-input short" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_short_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> pendek..."></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 15px 10px 6px 10px;">
+                                                <span class="section-label-lengan" style="background: #a39382;"> LENGAN PANJANG (+10K)</span>
+                                            </td>
+                                        </tr>
+                                        <?php 
+                                        foreach($sizes as $sz): 
+                                            $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
+                                        ?>
+                                        <tr>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
                                             <td><input type="number" name="qty_long_<?php echo $sz; ?>" class="qty-input long" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_long_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> panjang..."></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
 
-                                <!-- TAMBAHAN KAOS KAKI -->
                                 <div class="input-group" style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; border: 1px solid #c8e6c9;">
                                     <label style="font-weight: bold; color: #2e7d32; font-size: 0.85em;"><i class="fas fa-socks"></i> TAMBAHAN KAOS KAKI (+45K/PSG)</label>
                                     <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
@@ -140,7 +135,6 @@ session_start();
                                     <small style="color: #666; display: block; margin-top: 5px; font-size: 0.75em;">*Jumlah kaos kaki bisa berbeda dengan jumlah baju.</small>
                                 </div>
 
-                                <!-- SUMMARY BOX YANG SUDAH DILURUSKAN -->
                                 <div class="order-summary-box" style="margin-top: 20px; border: 2px dashed #ccc; padding: 15px; border-radius: 10px;">
                                     <div class="status-row">
                                         <span style="font-weight: bold;">Total Baju:</span> 
