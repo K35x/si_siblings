@@ -30,13 +30,7 @@
         <!-- CONTENT -->
         <div class="content">
 
-<<<<<<< Updated upstream
             <!--CARD STATISTIK -->
-=======
-            <!-- =========================
-                 CARD STATISTIK
-            ========================== -->
->>>>>>> Stashed changes
             <div class="cards">
 
                 <div class="card-custom">
@@ -61,7 +55,6 @@
 
             </div>
 
-<<<<<<< Updated upstream
             <!--BAGIAN BAWAH-->
             <div class="bottom">
 
@@ -78,19 +71,6 @@
                 </button>
             </div>
 
-=======
-            <!-- =========================
-                 BAGIAN BAWAH
-            ========================== -->
-            <div class="bottom">
-
-                <!-- TAMBAH PESANAN -->
-                <div class="box add-box">
-                    <i class="fas fa-plus"></i>
-                    <span>Tambah Pesanan</span>
-                </div>
-
->>>>>>> Stashed changes
                 <!-- AKTIVITAS TERAKHIR -->
                 <div class="box activity-card">
 
@@ -132,7 +112,6 @@
                 </div>
 
                 <!-- ANTRIAN -->
-<<<<<<< Updated upstream
                 <div class="box order-card">
                   <div class="order-header">
                    <h3>Antrian Pesanan</h3>
@@ -172,25 +151,11 @@
             </div>
          </div>
 
-=======
-                <div class="box big-box">
-                    Antrian Invoice dan Pesanan
-                </div>
-
-            </div>
-
->>>>>>> Stashed changes
         </div>
     </div>
 </div>
 
-<<<<<<< Updated upstream
 <!-- MODAL AKTIVITAS -->
-=======
-<!-- =========================
-     MODAL AKTIVITAS
-========================= -->
->>>>>>> Stashed changes
 <div class="modal-overlay" id="activityModal">
     <div class="activity-modal">
 
@@ -235,7 +200,6 @@
                         <td>12.09</td>
                         <td>Menambahkan pesanan</td>
                         <td>Kasir</td>
-<<<<<<< Updated upstream
                     </tr> 
                     <tr>
                         <td>12.09</td>
@@ -254,14 +218,6 @@
                     </tr>
                     
             
-=======
-                    </tr>
-                    <tr>
-                        <td>13.20</td>
-                        <td>Status pesanan diperbarui</td>
-                        <td>Owner</td>
-                    </tr>
->>>>>>> Stashed changes
                 </tbody>
             </table>
         </div>
@@ -275,7 +231,6 @@
     </div>
 </div>
 
-<<<<<<< Updated upstream
 <!-- JAVASCRIPT -->
 <script>
   // ===============================
@@ -324,28 +279,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 </script>
-=======
-<!-- =========================
-     JAVASCRIPT
-========================= -->
-<script>
-function openActivityModal() {
-    document.getElementById("activityModal").classList.add("show");
-}
-
-function closeActivityModal() {
-    document.getElementById("activityModal").classList.remove("show");
-}
-
-// Klik area gelap untuk menutup modal
-window.addEventListener("click", function (e) {
-    const modal = document.getElementById("activityModal");
-    if (e.target === modal) {
-        closeActivityModal();
-    }
-});
-</script>
->>>>>>> Stashed changes
 
 </body>
 </html>
