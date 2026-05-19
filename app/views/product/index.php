@@ -6,6 +6,7 @@
 <title>Siblings.co - Stok Produk</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="<?= asset('css/sidebar.css') ?>">
 <link rel="stylesheet" href="<?= asset('css/products.css') ?>">
 </head>
 <body>
@@ -67,6 +68,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
       <div class="kategori-content">
 
+<<<<<<< Updated upstream
       <div class="kain">
       <div class="kain-title">Cotton Combed 24s</div>
       <div class="ukuran-item">
@@ -304,6 +306,35 @@ include __DIR__ . '/../layouts/sidebar.php';
         </div>
         </div>
 
+=======
+        <div class="kain">
+          <div class="kain-title">Cotton Combed 24s</div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+        </div>
+
+        <div class="kain">
+          <div class="kain-title">Cotton Carded</div>
+          <div class="ukuran-row"><span>S</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+        </div>
+
+        <div class="kain">
+          <div class="kain-title">Semi Cotton</div>
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+        </div>
+
+>>>>>>> Stashed changes
       </div>
     </div>
 
@@ -319,6 +350,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">American Drill</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -332,6 +364,13 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
           <div class="ukuran-item">
@@ -397,6 +436,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Union</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -471,10 +511,18 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
         </div>
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
         <div class="kain">
           <div class="kain-title">Nagata Drill</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -488,6 +536,13 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
           <div class="ukuran-item">
@@ -566,6 +621,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Dryfit</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -579,6 +635,13 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
           <div class="ukuran-item">
@@ -645,6 +708,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Embos</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -719,10 +783,18 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
         </div>
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
         <div class="kain">
           <div class="kain-title">Jaquard</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -797,6 +869,13 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
         </div>
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
       </div>
@@ -814,6 +893,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Premium Cotton 24s</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -888,10 +968,18 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
         </div>
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
         <div class="kain">
           <div class="kain-title">Lacoste 24s</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -966,6 +1054,13 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
         </div>
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
       </div>
@@ -983,6 +1078,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Semi Cotton</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -1057,6 +1153,13 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
         </div>
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
 
       </div>
@@ -1074,6 +1177,7 @@ include __DIR__ . '/../layouts/sidebar.php';
 
         <div class="kain">
           <div class="kain-title">Custom</div>
+<<<<<<< Updated upstream
           <div class="ukuran-item">
           <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
           <div class="warna-list">
@@ -1148,6 +1252,13 @@ include __DIR__ . '/../layouts/sidebar.php';
             <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
           </div>    
         </div>
+=======
+          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button class="btn-edit"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
+>>>>>>> Stashed changes
         </div>
       </div>
 
@@ -1404,6 +1515,7 @@ function tambahProduk() {
     );
   }
 
+<<<<<<< Updated upstream
   // Tambah ukuran
   kainEl.insertAdjacentHTML(
     "beforeend",
@@ -1432,6 +1544,16 @@ function tambahProduk() {
             </button>
           </div>
         </div>
+=======
+  // === TAMBAH UKURAN ===
+  kainEl.insertAdjacentHTML("beforeend", `
+    <div class="ukuran-row">
+      <span>${ukuran}</span>
+      <span>${stok} pcs</span>
+      <div class="aksi">
+        <button class="btn-edit"><i class="fas fa-pen"></i></button>
+        <button class="btn-delete"><i class="fas fa-trash"></i></button>
+>>>>>>> Stashed changes
       </div>
     </div>
     `
@@ -1460,8 +1582,12 @@ document.addEventListener("click", function (e) {
     return;
   }
 
+<<<<<<< Updated upstream
   const ukuranRow = e.target.closest(".ukuran-row");
   if (!ukuranRow) return;
+=======
+  if (e.target.closest (".btn-edit")) {
+>>>>>>> Stashed changes
 
   const ukuranItem = ukuranRow.closest(".ukuran-item");
   const warnaList = ukuranItem?.querySelector(".warna-list");
@@ -1537,7 +1663,11 @@ document.addEventListener("click", function (e) {
   const deleteBtn = e.target.closest(".btn-delete");
   if (!deleteBtn) return;
 
+<<<<<<< Updated upstream
   if (!confirm("Yakin ingin menghapus data ini?")) return;
+=======
+  if (e.target.closest(".btn-delete")) {
+>>>>>>> Stashed changes
 
   // Hapus warna
   const warnaRow = deleteBtn.closest(".warna-row");
