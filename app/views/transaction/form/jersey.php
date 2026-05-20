@@ -1,6 +1,19 @@
 <?php
 session_start();
 ?>
+
+<form method="POST" action="<?= url('/transactions/cart') ?>">
+
+    <input type="hidden" name="kategori" value="jersey">
+
+<input
+    type="hidden"
+    name="index_edit"
+    value="<?= $_SESSION['edit_index'] ?? ''; ?>"
+>
+
+</form>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -80,7 +93,7 @@ session_start();
                                     </label>
                                 </div>
 
-                               <div class="design-upload-section">
+                            <div class="design-upload-section">
                                     <div class="card-header" style="background: #6d4c41; color: white; margin: 0 -20px 15px -20px; padding: 8px 20px; font-size: 0.9em;">
                                         <i class="fas fa-image"></i> Upload Referensi Desain
                                     </div>
