@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 19 Bulan Mei 2026 pada 03.46
+-- Waktu pembuatan: 19 Bulan Mei 2026 pada 13.50
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -472,21 +472,28 @@ CREATE TABLE `product_variant_options` (
   `option_id` int(11) NOT NULL,
   `variant_id` int(11) NOT NULL,
   `size_id` int(11) NOT NULL,
-  `color_id` int(11) NOT NULL
+  `color_id` int(11) NOT NULL,
+  `qty` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `product_variant_options`
 --
 
-INSERT INTO `product_variant_options` (`option_id`, `variant_id`, `size_id`, `color_id`) VALUES
-(1, 1, 1, 1),
-(2, 2, 1, 2),
-(3, 3, 1, 8),
-(4, 1, 2, 9),
-(5, 1, 3, 5),
-(6, 1, 4, 6),
-(7, 1, 5, 7);
+INSERT INTO `product_variant_options` (`option_id`, `variant_id`, `size_id`, `color_id`, `qty`) VALUES
+(2, 2, 1, 2, 1),
+(3, 3, 1, 8, 1),
+(8, 1, 1, 1, 1),
+(9, 1, 2, 9, 1),
+(10, 1, 3, 5, 1),
+(11, 1, 4, 6, 1),
+(12, 1, 5, 7, 1),
+(13, 1, 1, 2, 1),
+(14, 1, 1, 3, 1),
+(15, 4, 1, 1, 1),
+(16, 4, 1, 2, 1),
+(17, 4, 1, 3, 1),
+(18, 4, 1, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -700,7 +707,7 @@ ALTER TABLE `product_variants`
 -- AUTO_INCREMENT untuk tabel `product_variant_options`
 --
 ALTER TABLE `product_variant_options`
-  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT untuk tabel `user`
