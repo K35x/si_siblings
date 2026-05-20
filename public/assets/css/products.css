@@ -491,7 +491,7 @@ nav {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: var(--dot-color, #cbd5e1);
 }
 
 /* Stok per warna - dibuat lurus */
@@ -518,42 +518,9 @@ nav {
   box-shadow: 0 0 0 3px rgba(74, 51, 40, 0.08);
 }
 
-/* WARNA MEJIKUHIBINIU */
-.warna-row:nth-child(1) span:first-child::before {
-  background: #ef4444;
-}
-
-.warna-row:nth-child(2) span:first-child::before {
-  background: #f97316;
-}
-
-.warna-row:nth-child(3) span:first-child::before {
-  background: #eab308;
-}
-
-.warna-row:nth-child(4) span:first-child::before {
-  background: #22c55e;
-}
-
-.warna-row:nth-child(5) span:first-child::before {
-  background: #3b82f6;
-}
-
-.warna-row:nth-child(6) span:first-child::before {
-  background: #6366f1;
-}
-
-.warna-row:nth-child(7) span:first-child::before {
-  background: #8b5cf6;
-}
-
-.warna-row:nth-child(8) span:first-child::before {
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-}
-
-.warna-row:nth-child(9) span:first-child::before {
-  background: #111827;
+/* WARNA DOT — pakai CSS variable dari PHP inline style */
+.warna-row span:first-child::before {
+  background: var(--dot-color, #cbd5e1);
 }
 
 /* AKSI EDIT / DELETE */
