@@ -1,50 +1,10 @@
 <?php
-session_start();
-
-// Simulasi harga per pcs
-$harga_per_pcs = 60000; 
-
-// 1. Logika Hapus Item (Taruh di paling atas sebelum HTML)
-if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
-    if (isset($_SESSION['keranjang'][$id])) {
-        unset($_SESSION['keranjang'][$id]);
-        $_SESSION['keranjang'] = array_values($_SESSION['keranjang']); // Reset nomor index
-    }
-    header('Location: ' . url('/transactions/cart'));
-    exit();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
 
-// 2. Logika Simpan / Update Data
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $s   = (int)($_POST['qty_short_S'] ?? 0) + (int)($_POST['qty_long_S'] ?? 0);
-    $m   = (int)($_POST['qty_short_M'] ?? 0) + (int)($_POST['qty_long_M'] ?? 0);
-    $l   = (int)($_POST['qty_short_L'] ?? 0) + (int)($_POST['qty_long_L'] ?? 0);
-    $xl  = (int)($_POST['qty_short_XL'] ?? 0) + (int)($_POST['qty_long_XL'] ?? 0);
-    $xxl = (int)($_POST['qty_short_XXL'] ?? 0) + (int)($_POST['qty_long_XXL'] ?? 0);
-
-    $total_qty = $s + $m + $l + $xl + $xxl;
-    $total_harga = $total_qty * $harga_per_pcs;
-
-    $item_baru = [
-        'kategori' => 'T-Shirt',
-        'bahan'    => $_POST['jenis_bahan'] ?? '-',
-        'warna'    => $_POST['warna_kain'] ?? '-',
-        'sablon'   => $_POST['jenis_sablon'] ?? '-',
-        'rincian'  => ['S' => $s, 'M' => $m, 'L' => $l, 'XL' => $xl, 'XXL' => $xxl],
-        'qty'      => $total_qty,
-        'harga'    => $total_harga
-    ];
-
-    if (isset($_POST['index_edit']) && $_POST['index_edit'] !== "") {
-        $idx = $_POST['index_edit'];
-        $_SESSION['keranjang'][$idx] = $item_baru;
-    } else {
-        $_SESSION['keranjang'][] = $item_baru;
-    }
-    header('Location: ' . url('/transactions/cart'));
-    exit();
-}
+$validationErrors = $validationErrors ?? [];
+$oldInput = $oldInput ?? [];
 ?>
 
 <!DOCTYPE html>
@@ -65,6 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="content-padding">
                 <h1 class="main-title">Keranjang Pesanan</h1>
                 <p class="subtitle">Berikut adalah daftar item yang akan dipesan.</p>
+
+                <?php if (!empty($validationErrors)): ?>
+                    <div class="alert alert-danger" style="background:#fdecea;color:#b71c1c;border:1px solid #f5c2c7;border-radius:6px;padding:12px;margin:12px 0;">
+                        <strong>Input pesanan belum valid.</strong>
+                        <ul style="margin:8px 0 0 18px;">
+                            <?php foreach ($validationErrors as $message): ?>
+                                <li><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($oldInput)): ?>
+                    <div class="alert alert-warning" style="background:#fff8e1;color:#6d4c41;border:1px solid #ffe082;border-radius:6px;padding:12px;margin:12px 0;">
+                        Data input lama masih tersedia untuk diperbaiki. Silakan kembali ke form produk dan submit ulang setelah koreksi.
+                    </div>
+                <?php endif; ?>
 
                 <div class="cart-card">
                     <table class="cart-table">

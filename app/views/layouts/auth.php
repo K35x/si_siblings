@@ -21,16 +21,22 @@
             <div class="col-md-6 login-section h-100">
                 <div class="login-card">
                     <h1>Login</h1>
-                    <form>
+                    <?php if (!empty($error)): ?>
+                        <div class="alert alert-danger" role="alert">
+                            <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form method="post" action="<?= url('/login') ?>">
                         <div class="input-group mb-3">
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
-                            <input type="email" class="form-control" placeholder="email@gmail.com" required>
+                            <input type="text" name="username" class="form-control" placeholder="username" value="<?= htmlspecialchars($username ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                         </div>
 
                         <div class="mb-1">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" class="form-control" id="password" placeholder="password" required>
+                                <input type="password" name="password" class="form-control" id="password" placeholder="password" required>
                                 <span class="input-group-text password-toggle">
                                     <i class="fas fa-eye toggle-password"></i>
                                 </span>

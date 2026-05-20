@@ -1,3 +1,17 @@
+<?php
+$stocks = $stocks ?? [];
+$stockSummary = $stockSummary ?? ['total_qty' => 0, 'low_stock_qty' => 0, 'low_stock_items' => 0];
+$stockCategories = $stockCategories ?? [];
+$sidebarRole = $sidebarRole ?? 'owner';
+$activeMenu = $activeMenu ?? 'products';
+
+$groupedStocks = [];
+foreach ($stocks as $stock) {
+    $category = $stock['nama_kategori'] ?? 'Tanpa Kategori';
+    $variant = $stock['nama_varian'] ?? 'Tanpa Varian';
+    $groupedStocks[$category][$variant][] = $stock;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -10,13 +24,8 @@
 </head>
 <body>
 
-
 <div class="container">
-<?php
-$sidebarRole = 'owner';
-$activeMenu = 'products';
-include __DIR__ . '/../layouts/sidebar.php';
-?>
+<?php include __DIR__ . '/../layouts/sidebar.php'; ?>
 
 <!-- MAIN -->
 <div class="main-content">
@@ -32,14 +41,14 @@ include __DIR__ . '/../layouts/sidebar.php';
   <div class="cards">
     <div class="card-custom">
       <p>Total Item Tersedia</p>
-      <h2 class="green">250</h2>
+      <h2 class="green"><?= (int) $stockSummary['total_qty'] ?></h2>
       <small>pcs</small>
     </div>
 
     <div class="card-custom">
       <p>Stok Menipis</p>
-      <h2 class="red">15</h2>
-      <small>pcs</small>
+      <h2 class="red"><?= (int) $stockSummary['low_stock_items'] ?></h2>
+      <small>item stok ≤ 10 pcs</small>
     </div>
   </div>
 
@@ -60,32 +69,12 @@ include __DIR__ . '/../layouts/sidebar.php';
     </div>
 
     <div class="activity-list" id="activityList">
-
-      <div class="activity-item keluar" data-date="2026-05-01">
-        <div class="time">01/05/2026<br><small>10:15</small></div>
+      <div class="activity-item">
         <div class="detail">
-          <p class="title">Stok Keluar</p>
-          <small>25pcs Kaos Hitam Uk.L</small>
+          <p class="title">Riwayat stok belum tersedia</p>
+          <small>Project simple ini hanya menyimpan jumlah stok saat ini, tanpa stock movements.</small>
         </div>
       </div>
-
-      <div class="activity-item masuk" data-date="2026-04-30">
-        <div class="time">30/04/2026<br><small>13:00</small></div>
-        <div class="detail">
-          <p class="title">Stok Masuk</p>
-          <small>50pcs Kaos Putih Uk.M</small>
-        </div>
-      </div>
-
-      <div class="activity-item masuk" data-date="2026-04-02">
-        <div class="time">02/04/2026<br><small>14:00</small></div>
-        <div class="detail">
-          <p class="title">Stok Masuk</p>
-          <small>100pcs Kaos Putih Uk.s</small>
-        </div>
-      </div>
-      
-
     </div>
   </div>
 
@@ -97,22 +86,18 @@ include __DIR__ . '/../layouts/sidebar.php';
   <!-- HEADER -->
   <div class="right-header">
 
-  <div class="header-left">
-    <h3>📦 Stok Barang</h3>
-  </div>
-
-  <div class="header-actions">
-</div>
+    <div class="header-left">
+      <h3>📦 Stok Barang</h3>
+    </div>
 
     <div style="display:flex; gap:10px;">
       <select id="filterKategori">
         <option value="">Semua</option>
-        <option value="T-shirt">T-shirt</option>
-        <option value="PDH">PDH</option>
-        <option value="Jersey">Jersey</option>
-        <option value="Polo Shirt">Polo Shirt</option>
-        <option value="Seragam Olahraga">Seragam Olahraga</option>
-        <option value="Jacket">Jacket</option>
+        <?php foreach ($stockCategories as $category): ?>
+          <option value="<?= htmlspecialchars($category['nama_kategori'], ENT_QUOTES, 'UTF-8') ?>">
+            <?= htmlspecialchars($category['nama_kategori'], ENT_QUOTES, 'UTF-8') ?>
+          </option>
+        <?php endforeach; ?>
       </select>
 
       <button class="btn" onclick="openModal()">+ Tambah</button>
@@ -122,203 +107,56 @@ include __DIR__ . '/../layouts/sidebar.php';
 
   <!-- WRAPPER -->
   <div class="product-wrapper">
-    <!-- T-SHIRT -->
-    <div class="kategori-item" data-kategori="T-shirt">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span> T-shirt</span>
-        <span>160 pcs</span>
+    <?php if ($groupedStocks === []): ?>
+      <div class="empty-state">
+        <p>Belum ada data stok produk.</p>
       </div>
+    <?php endif; ?>
 
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Cotton Combed 24s</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+    <?php foreach ($groupedStocks as $categoryName => $variants): ?>
+      <?php
+        $categoryTotal = 0;
+        foreach ($variants as $items) {
+            foreach ($items as $item) {
+                $categoryTotal += (int) $item['qty'];
+            }
+        }
+      ?>
+      <div class="kategori-item" data-kategori="<?= htmlspecialchars($categoryName, ENT_QUOTES, 'UTF-8') ?>">
+        <div class="kategori-header">
+          <input type="checkbox" class="pilih-hapus" style="display:none;">
+          <span><?= htmlspecialchars($categoryName, ENT_QUOTES, 'UTF-8') ?></span>
+          <span><?= $categoryTotal ?> pcs</span>
         </div>
 
-        <div class="kain">
-          <div class="kain-title">Cotton Carded</div>
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Semi Cotton</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-
-      </div>
-    </div>
-
-    <!-- PDH -->
-    <div class="kategori-item" data-kategori="PDH">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>PDH</span>
-        <span>60 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">American Drill</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Union</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Nagata Drill</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- JERSEY -->
-    <div class="kategori-item" data-kategori="Jersey">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Jersey</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Dryfit</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Embos</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Jaquard</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- POLO -->
-    <div class="kategori-item" data-kategori="Polo Shirt">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Polo Shirt</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Premium Cotton 24s</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Lacoste 24s</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- SERAGAM -->
-    <div class="kategori-item" data-kategori="Seragam Olahraga">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Seragam Olahraga</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Semi Cotton</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- JACKET -->
-    <div class="kategori-item" data-kategori="Jacket">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Jacket</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Custom</div>
-          <div class="ukuran-row"><span>S</span><span>20 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>M</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>L</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
-          <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><div class="aksi"><button>✏️</button><button>🗑️</button></div></div>
+        <div class="kategori-content">
+          <?php foreach ($variants as $variantName => $items): ?>
+            <div class="kain">
+              <div class="kain-title"><?= htmlspecialchars($variantName, ENT_QUOTES, 'UTF-8') ?></div>
+              <?php foreach ($items as $item): ?>
+                <?php
+                  $sizeLabel = $item['size_name'] ?? '-';
+                  $colorLabel = $item['color_name'] ?? null;
+                  $label = $colorLabel ? $sizeLabel . ' / ' . $colorLabel : $sizeLabel;
+                ?>
+                <div class="ukuran-row" data-stock-id="<?= (int) $item['stock_id'] ?>">
+                  <span><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+                  <span><?= (int) $item['qty'] ?> pcs</span>
+                  <div class="aksi">
+                    <button type="button" title="Edit tampilan saja">✏️</button>
+                    <button type="button" title="Hapus tampilan saja">🗑️</button>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endforeach; ?>
         </div>
       </div>
-
-    </div>
-
+    <?php endforeach; ?>
   </div>
+</div>
+</div>
+</div>
 </div>
 
 <!-- MODAL -->
@@ -326,51 +164,31 @@ include __DIR__ . '/../layouts/sidebar.php';
   <div class="modal-content">
 
     <h3>Tambah Produk</h3>
+    <p style="font-size:12px; color:#666; margin-bottom:12px;">
+      Form ini menambah stok di tampilan sementara. Penyimpanan ke database bisa dibuat di fitur CRUD berikutnya.
+    </p>
 
-      <!-- KATEGORI -->
+    <!-- KATEGORI -->
     <div class="input-group">
       <label>Kategori</label>
       <input list="listKategori" id="kategori" placeholder="Pilih atau ketik kategori">
       <datalist id="listKategori">
-        <option value="Tshirt">
-        <option value="Jersey">
-        <option value="PDH">
-        <option value="Polo Shirt">
-        <option value="Seragam Olahraga">
-        <option value="Jacket">
+        <?php foreach ($stockCategories as $category): ?>
+          <option value="<?= htmlspecialchars($category['nama_kategori'], ENT_QUOTES, 'UTF-8') ?>"></option>
+        <?php endforeach; ?>
       </datalist>
     </div>
 
     <!-- KAIN -->
     <div class="input-group">
-      <label>Jenis Kain</label>
-      <input list="listKain" id="kain" placeholder="Pilih atau ketik kain">
-      <datalist id="listKain">
-        <option value="Semi Cotton">
-        <option value="Cotton Carded">
-        <option value="Cotton Combed 24s">
-        <option value="Unione">
-        <option value="American Drill">
-        <option value="Nagata Drill">
-        <option value="Embos">
-        <option value="Jaquard">
-        <option value="Dryfit">
-        <option value="Premium Cotton 24s">
-        <option value="Lacoste 24s">
-      </datalist>
+      <label>Jenis Kain / Varian</label>
+      <input id="kain" placeholder="Contoh: Cotton Combed 24s">
     </div>
 
     <!-- UKURAN -->
     <div class="input-group">
-      <label>Ukuran</label>
-      <input list="listUkuran" id="ukuran" placeholder="S, M, L, XL...">
-      <datalist id="listUkuran">
-        <option value="S">
-        <option value="M">
-        <option value="L">
-        <option value="XL">
-        <option value="XXL">
-      </datalist>
+      <label>Ukuran / Warna</label>
+      <input id="ukuran" placeholder="Contoh: M / Hitam">
     </div>
 
     <!-- STOK -->
@@ -388,10 +206,11 @@ include __DIR__ . '/../layouts/sidebar.php';
 </div>
 
 <script>
-
 // FILTER AKTIVITAS
-document.getElementById("filterTanggal").addEventListener("change", filterData);
-document.getElementById("filterJenis").addEventListener("change", filterData);
+const filterTanggal = document.getElementById("filterTanggal");
+const filterJenis = document.getElementById("filterJenis");
+if (filterTanggal) filterTanggal.addEventListener("change", filterData);
+if (filterJenis) filterJenis.addEventListener("change", filterData);
 
 function filterData(){
   const tanggal = document.getElementById("filterTanggal").value;
@@ -432,9 +251,8 @@ function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
-// TAMBAH PRODUK
+// TAMBAH PRODUK CLIENT-SIDE ONLY
 function tambahProduk() {
-
   const kategori = document.getElementById("kategori").value.trim();
   const kain = document.getElementById("kain").value.trim();
   const ukuran = document.getElementById("ukuran").value.trim();
@@ -446,8 +264,6 @@ function tambahProduk() {
   }
 
   const wrapper = document.querySelector(".product-wrapper");
-
-  // CEK KATEGORI 
   let kategoriEl = document.querySelector(`.kategori-item[data-kategori="${kategori}"]`);
 
   if (!kategoriEl) {
@@ -466,8 +282,6 @@ function tambahProduk() {
   }
 
   const content = kategoriEl.querySelector(".kategori-content");
-
-  // CEK KAIN
   let kainEl = [...content.querySelectorAll(".kain")]
     .find(k => k.querySelector(".kain-title").innerText === kain);
 
@@ -482,19 +296,17 @@ function tambahProduk() {
       .find(k => k.querySelector(".kain-title").innerText === kain);
   }
 
-  // === TAMBAH UKURAN ===
   kainEl.insertAdjacentHTML("beforeend", `
     <div class="ukuran-row">
       <span>${ukuran}</span>
       <span>${stok} pcs</span>
       <div class="aksi">
-        <button>✏️</button>
-        <button>🗑️</button>
+        <button type="button">✏️</button>
+        <button type="button">🗑️</button>
       </div>
     </div>
   `);
 
-  // reset form
   document.getElementById("kategori").value = "";
   document.getElementById("kain").value = "";
   document.getElementById("ukuran").value = "";
@@ -503,14 +315,11 @@ function tambahProduk() {
   closeModal();
 }
 
-// EDIT INLINE
+// EDIT INLINE CLIENT-SIDE ONLY
 document.addEventListener("click", function (e) {
-
   if (e.target.textContent === "✏️") {
-
     const row = e.target.closest(".ukuran-row");
     const stokEl = row.children[1];
-
     const oldValue = stokEl.textContent.replace(" pcs", "");
 
     stokEl.innerHTML = `<input type="number" value="${oldValue}" style="width:60px;">`;
@@ -531,11 +340,9 @@ document.addEventListener("click", function (e) {
   }
 });
 
-// HAPUS INLINE
+// HAPUS INLINE CLIENT-SIDE ONLY
 document.addEventListener("click", function (e) {
-
   if (e.target.textContent === "🗑️") {
-
     const row = e.target.closest(".ukuran-row");
     const kain = row.closest(".kain");
     const kategori = row.closest(".kategori-content");
@@ -547,7 +354,7 @@ document.addEventListener("click", function (e) {
   }
 });
 
-// MODE HAPUS KATEGORI
+// MODE HAPUS KATEGORI CLIENT-SIDE ONLY
 let deleteMode = false;
 
 function toggleDeleteMode() {
@@ -592,7 +399,6 @@ function hapusTerpilih() {
 window.onclick = e => {
   if (e.target.id === "modal") closeModal();
 };
-</script>
 </script>
 
 </body>

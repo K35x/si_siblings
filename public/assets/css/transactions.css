@@ -82,9 +82,9 @@ h1 { font-size: 32px; margin-bottom: 25px; color: #4A3328 !important; font-weigh
 .tab { padding: 8px 20px; background: white; border: 2px solid #4A3328; border-radius: 20px; font-weight: bold; cursor: pointer; color: #4A3328; }
 .tab.active { background: #4A3328; color: white; }
 
-.order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; }
-.order-card { background: white; border-radius: 15px; padding: 20px; display: flex; gap: 15px; align-items: center; border: 1.5px solid #E6D5B8; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-.order-card:hover { transform: translateY(-5px); border-color: #4A3328; }
+.order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.order-card { background: white; border-radius: 12px; padding: 18px; border: 1.5px solid #E6D5B8; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.order-card:hover { transform: translateY(-3px); border-color: #4A3328; }
 
 .status-badge { display: inline-block; padding: 4px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-top: 5px; }
 .status-proses { background: #FFD966; color: #7F6000; }
