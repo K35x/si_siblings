@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 19 Bulan Mei 2026 pada 13.50
+-- Waktu pembuatan: 19 Bulan Mei 2026 pada 03.46
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -95,26 +95,6 @@ INSERT INTO `orders` (`order_id`, `order_code`, `customer_id`, `tanggal_order`, 
 (29, 'INV-2026-0015', 4, '2026-05-13 09:30:00', 'done', 'Order kaos sablon plastisol premium distro', 24, 2880000.00, 240000.00, 3120000.00, 2),
 (30, 'INV-2026-0016', 5, '2026-05-13 14:00:00', 'processing', 'Order hoodie sablon DTG full color untuk EO', 12, 1800000.00, 120000.00, 1920000.00, 3);
 
---
--- Trigger `orders`
---
-DELIMITER $$
-CREATE TRIGGER `trg_order_code` BEFORE INSERT ON `orders` FOR EACH ROW BEGIN
-  DECLARE next_number INT;
-  DECLARE tahun CHAR(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-  SET tahun = DATE_FORMAT(NEW.tanggal_order, '%Y');
-
-  SET next_number = (
-    SELECT IFNULL(MAX(CAST(SUBSTRING(order_code, 10) AS UNSIGNED)), 0) + 1
-    FROM orders
-    WHERE SUBSTRING(order_code, 5, 4) = tahun
-  );
-
-  SET NEW.order_code = CONCAT('INV-', tahun, '-', LPAD(next_number, 4, '0'));
-END
-$$
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -302,17 +282,6 @@ INSERT INTO `products` (`product_id`, `category_id`, `nama_produk`, `deskripsi`,
 (11, 10, 'Kaos Glow in the Dark', 'Kaos sablon tinta fosfor menyala dalam gelap', 24, 1),
 (12, 10, 'Kaos Sablon Rubber', 'Kaos sablon tinta karet elastis untuk kain gelap', 24, 1);
 
---
--- Trigger `products`
---
-DELIMITER $$
-CREATE TRIGGER `trg_minimal_order_update` BEFORE UPDATE ON `products` FOR EACH ROW BEGIN
-    IF NEW.minimal_order < 24 THEN
-        SET NEW.minimal_order = 24;
-    END IF;
-END
-$$
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -428,6 +397,50 @@ INSERT INTO `product_size` (`size_id`, `size_name`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `product_stock`
+--
+
+CREATE TABLE `product_stock` (
+  `stock_id` int(11) NOT NULL,
+  `variant_id` int(11) NOT NULL,
+  `size_id` int(11) NOT NULL,
+  `color_id` int(11) DEFAULT NULL,
+  `qty` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `product_stock`
+--
+
+INSERT INTO `product_stock` (`stock_id`, `variant_id`, `size_id`, `color_id`, `qty`) VALUES
+(1, 1, 1, 8, 20),
+(2, 1, 2, 8, 30),
+(3, 1, 3, 8, 30),
+(4, 1, 4, 8, 30),
+(5, 1, 5, 8, 20),
+(6, 3, 1, 9, 10),
+(7, 3, 2, 9, 10),
+(8, 3, 3, 9, 10),
+(9, 3, 4, 9, 10),
+(10, 3, 5, 9, 10),
+(11, 4, 1, 9, 10),
+(12, 4, 2, 9, 15),
+(13, 4, 3, 9, 15),
+(14, 4, 4, 9, 10),
+(15, 7, 2, 5, 12),
+(16, 7, 3, 5, 12),
+(17, 8, 3, 5, 10),
+(18, 8, 4, 5, 10),
+(19, 9, 1, 8, 20),
+(20, 9, 2, 8, 20),
+(21, 10, 2, 9, 15),
+(22, 10, 3, 9, 15),
+(23, 11, 2, 8, 8),
+(24, 11, 3, 8, 7);
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `product_variants`
 --
 
@@ -438,6 +451,7 @@ CREATE TABLE `product_variants` (
   `bahan` varchar(150) DEFAULT NULL,
   `tipe_sablon_bordir` varchar(150) DEFAULT NULL,
   `harga_start_from` decimal(12,2) NOT NULL,
+  `minimal_order` int(11) DEFAULT NULL,
   `catatan` text DEFAULT NULL,
   `aktif` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -446,21 +460,21 @@ CREATE TABLE `product_variants` (
 -- Dumping data untuk tabel `product_variants`
 --
 
-INSERT INTO `product_variants` (`variant_id`, `product_id`, `nama_varian`, `bahan`, `tipe_sablon_bordir`, `harga_start_from`, `catatan`, `aktif`) VALUES
-(1, 1, 'Cotton Combed 24s', 'Cotton Combed 24s', 'Plastisol / Rubber / DTF', 62000.00, 'Minimal order 24 pcs. Lengan panjang +5k, di atas XXL +5k.', 1),
-(2, 1, 'Semi Cotton / Polyester', 'Semi Cotton / Polyester', 'Rubber', 55000.00, 'Minimal order 24 pcs. Lengan panjang +5k, di atas XXL +5k.', 1),
-(3, 1, 'Cotton Carded', 'Cotton Carded', 'Plastisol', 60000.00, 'Minimal order 24 pcs. Lengan panjang +5k, di atas XXL +5k.', 1),
-(4, 2, 'PDH Unione 130k', 'Unione', 'Bordir maks 3 titik', 130000.00, 'Ukuran big size di atas XL +10k. Custom lengan rompi +12k.', 1),
-(5, 2, 'PDH American Drill 135k', 'American Drill', 'Bordir maks 3 titik', 135000.00, 'Ukuran big size di atas XL +10k. Custom lengan rompi +12k.', 1),
-(6, 2, 'PDH Nagata Drill 140k', 'Nagata Drill', 'Bordir maks 3 titik', 140000.00, 'Ukuran big size di atas XL +10k. Custom lengan rompi +12k.', 1),
-(7, 3, 'Print Depan Polyflex', 'Milano', 'Polyflex (logo, nameset, no punggung)', 110000.00, 'Lengan panjang +10k, big size +10k.', 1),
-(8, 3, 'Full Print Polyflex Setelan', 'Milano', 'Full Print Polyflex', 120000.00, 'Lengan panjang +10k, big size +10k.', 1),
-(9, 4, 'Polo Premium Cotton', 'Cotton Pique Premium', 'Plastisol / Bordir', 95000.00, 'Minimal order 24 pcs. Bordir logo +30k.', 1),
-(10, 5, 'Seragam Olahraga Dryfit', 'Dryfit Polyester', 'Polyflex / Sublimasi', 85000.00, 'Minimal order 24 pcs. Tambahan nama +10k.', 1),
-(11, 6, 'Hoodie Fleece Custom', 'Fleece Cotton', 'Rubber / DTG', 150000.00, 'Minimal order 12 pcs. Glow in the dark +20k.', 1),
-(12, 7, 'Kaos Sablon Manual 1 Warna', 'Cotton Combed 30s', 'Screen Printing', 65000.00, 'Minimal order 24 pcs. Tambahan warna +8k.', 1),
-(13, 8, 'Kaos Sablon DTG Full Color', 'Cotton Combed 24s', 'DTG Digital Printing', 120000.00, 'Minimal order 12 pcs. Custom desain logo +15k.', 1),
-(14, 9, 'Kaos Polyflex Nameset', 'Polyester Dryfit', 'Polyflex', 95000.00, 'Minimal order 12 pcs. Tambahan nomor +5k.', 1);
+INSERT INTO `product_variants` (`variant_id`, `product_id`, `nama_varian`, `bahan`, `tipe_sablon_bordir`, `harga_start_from`, `minimal_order`, `catatan`, `aktif`) VALUES
+(1, 1, 'Cotton Combed 24s', 'Cotton Combed 24s', 'Plastisol / Rubber / DTF', 62000.00, 24, 'Minimal order 24 pcs. Lengan panjang +5k, di atas XXL +5k.', 1),
+(2, 1, 'Semi Cotton / Polyester', 'Semi Cotton / Polyester', 'Rubber', 55000.00, 24, 'Minimal order 24 pcs. Lengan panjang +5k, di atas XXL +5k.', 1),
+(3, 1, 'Cotton Carded', 'Cotton Carded', 'Plastisol', 60000.00, 24, 'Minimal order 24 pcs. Lengan panjang +5k, di atas XXL +5k.', 1),
+(4, 2, 'PDH Unione 130k', 'Unione', 'Bordir maks 3 titik', 130000.00, NULL, 'Ukuran big size di atas XL +10k. Custom lengan rompi +12k.', 1),
+(5, 2, 'PDH American Drill 135k', 'American Drill', 'Bordir maks 3 titik', 135000.00, NULL, 'Ukuran big size di atas XL +10k. Custom lengan rompi +12k.', 1),
+(6, 2, 'PDH Nagata Drill 140k', 'Nagata Drill', 'Bordir maks 3 titik', 140000.00, NULL, 'Ukuran big size di atas XL +10k. Custom lengan rompi +12k.', 1),
+(7, 3, 'Print Depan Polyflex', 'Milano', 'Polyflex (logo, nameset, no punggung)', 110000.00, NULL, 'Lengan panjang +10k, big size +10k.', 1),
+(8, 3, 'Full Print Polyflex Setelan', 'Milano', 'Full Print Polyflex', 120000.00, NULL, 'Lengan panjang +10k, big size +10k.', 1),
+(9, 4, 'Polo Premium Cotton', 'Cotton Pique Premium', 'Plastisol / Bordir', 95000.00, 24, 'Minimal order 24 pcs. Bordir logo +30k.', 1),
+(10, 5, 'Seragam Olahraga Dryfit', 'Dryfit Polyester', 'Polyflex / Sublimasi', 85000.00, 24, 'Minimal order 24 pcs. Tambahan nama +10k.', 1),
+(11, 6, 'Hoodie Fleece Custom', 'Fleece Cotton', 'Rubber / DTG', 150000.00, 12, 'Minimal order 12 pcs. Glow in the dark +20k.', 1),
+(12, 7, 'Kaos Sablon Manual 1 Warna', 'Cotton Combed 30s', 'Screen Printing', 65000.00, 24, 'Minimal order 24 pcs. Tambahan warna +8k.', 1),
+(13, 8, 'Kaos Sablon DTG Full Color', 'Cotton Combed 24s', 'DTG Digital Printing', 120000.00, 12, 'Minimal order 12 pcs. Custom desain logo +15k.', 1),
+(14, 9, 'Kaos Polyflex Nameset', 'Polyester Dryfit', 'Polyflex', 95000.00, 12, 'Minimal order 12 pcs. Tambahan nomor +5k.', 1);
 
 -- --------------------------------------------------------
 
@@ -472,36 +486,29 @@ CREATE TABLE `product_variant_options` (
   `option_id` int(11) NOT NULL,
   `variant_id` int(11) NOT NULL,
   `size_id` int(11) NOT NULL,
-  `color_id` int(11) NOT NULL,
-  `qty` int(11) NOT NULL DEFAULT 1
+  `color_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `product_variant_options`
 --
 
-INSERT INTO `product_variant_options` (`option_id`, `variant_id`, `size_id`, `color_id`, `qty`) VALUES
-(2, 2, 1, 2, 1),
-(3, 3, 1, 8, 1),
-(8, 1, 1, 1, 1),
-(9, 1, 2, 9, 1),
-(10, 1, 3, 5, 1),
-(11, 1, 4, 6, 1),
-(12, 1, 5, 7, 1),
-(13, 1, 1, 2, 1),
-(14, 1, 1, 3, 1),
-(15, 4, 1, 1, 1),
-(16, 4, 1, 2, 1),
-(17, 4, 1, 3, 1),
-(18, 4, 1, 1, 1);
+INSERT INTO `product_variant_options` (`option_id`, `variant_id`, `size_id`, `color_id`) VALUES
+(1, 1, 1, 1),
+(2, 2, 1, 2),
+(3, 3, 1, 8),
+(4, 1, 2, 9),
+(5, 1, 3, 5),
+(6, 1, 4, 6),
+(7, 1, 5, 7);
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `user`
+-- Struktur dari tabel `users`
 --
 
-CREATE TABLE `user` (
+CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -509,24 +516,49 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `user`
+-- Dumping data untuk tabel `users`
 --
 
-INSERT INTO `user` (`user_id`, `username`, `password`, `role`) VALUES
-(1, 'immanuel', 'passwordku123', 'owner'),
-(2, 'Kamal', 'kamal123', 'kasir'),
-(3, 'kalyca', 'kalyca123', 'kasir'),
-(4, 'admin_sablon', 'admin2026', 'owner'),
-(5, 'rina', 'rina123', 'kasir'),
-(6, 'agus', 'agus123', 'kasir'),
-(7, 'budi', 'budi123', 'owner'),
-(8, 'sari', 'sari123', 'kasir'),
-(9, 'eko', 'eko123', 'kasir'),
-(10, 'lia', 'lia123', 'owner');
+INSERT INTO `users` (`user_id`, `username`, `password`, `role`) VALUES
+(1, 'immanuel', '$2y$10$1vPU3gk7BKbNGKpDXE9CheD7eJtxa3BXPBSQexwCVLkJpYsq2AiKe', 'owner'),
+(2, 'Kamal', '$2y$10$Zo9ymvkH1ZIsF/kyuWmiGOkEwjNKEn/gelhQRR1ZneGU1kWMoDccK', 'kasir'),
+(3, 'kalyca', '$2y$10$.BszTCf/4eHURnOeFgBUIuS2RBr5SGjEUrBj55UuWGVHbpYa/HbEO', 'kasir'),
+(4, 'admin_sablon', '$2y$10$3rR4lYN7/3x09IuLt4ggOOdO6obUq0bnjHACYY0Q/DFzSRsS8LfOO', 'owner'),
+(5, 'rina', '$2y$10$eRl0uFya3O43xubGu8KVj.JggOJwfLre34O06dRX0IAZdxSCNWEZK', 'kasir'),
+(6, 'agus', '$2y$10$lPsLiMs5pPjIexNyR2PQ8O/UFTZWue2e.PphX3GmJDlmFUol5QatG', 'kasir'),
+(7, 'budi', '$2y$10$nrNq3JfgiZiv75E7McR8U.i9mQ8nla4Ms21.mqWjox6qNiC3wbyfe', 'owner'),
+(8, 'sari', '$2y$10$H1J8uSOap5wPTIA.VtEq6ehBGnfddxAsShLvQvNmXE2edPjWqwMOa', 'kasir'),
+(9, 'eko', '$2y$10$9HbU7yJ4SMV0LDFJEWiWiOttNk9i.7RiL/ub6dLA4sp.BZHoNEMf.', 'kasir'),
+(10, 'lia', '$2y$10$GNswPRE9nJzSWLGUgmdaCOyD2QCdu54zbZmAGcbY6E4PVtguBbAOa', 'owner');
+
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `invoice_sequences`
+--
+
+CREATE TABLE `invoice_sequences` (
+  `tahun` char(4) NOT NULL,
+  `last_number` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `invoice_sequences`
+--
+
+INSERT INTO `invoice_sequences` (`tahun`, `last_number`) VALUES
+('2026', 20);
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indeks untuk tabel `invoice_sequences`
+--
+ALTER TABLE `invoice_sequences`
+  ADD PRIMARY KEY (`tahun`);
 
 --
 -- Indeks untuk tabel `customers`
@@ -541,7 +573,7 @@ ALTER TABLE `orders`
   ADD PRIMARY KEY (`order_id`),
   ADD UNIQUE KEY `order_code` (`order_code`),
   ADD KEY `fk_orders_walkincustomer` (`customer_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `idx_orders_user_id` (`user_id`);
 
 --
 -- Indeks untuk tabel `order_items`
@@ -605,6 +637,16 @@ ALTER TABLE `product_size`
   ADD PRIMARY KEY (`size_id`);
 
 --
+-- Indeks untuk tabel `product_stock`
+--
+ALTER TABLE `product_stock`
+  ADD PRIMARY KEY (`stock_id`),
+  ADD UNIQUE KEY `uq_product_stock_variant_size_color` (`variant_id`,`size_id`,`color_id`),
+  ADD KEY `fk_product_stock_variant` (`variant_id`),
+  ADD KEY `fk_product_stock_size` (`size_id`),
+  ADD KEY `fk_product_stock_color` (`color_id`);
+
+--
 -- Indeks untuk tabel `product_variants`
 --
 ALTER TABLE `product_variants`
@@ -616,12 +658,13 @@ ALTER TABLE `product_variants`
 --
 ALTER TABLE `product_variant_options`
   ADD PRIMARY KEY (`option_id`),
+  ADD UNIQUE KEY `uq_product_variant_options_variant_size_color` (`variant_id`,`size_id`,`color_id`),
   ADD KEY `variant_id` (`variant_id`),
   ADD KEY `size_id` (`size_id`),
   ADD KEY `color_id` (`color_id`);
 
 --
--- Indeks untuk tabel `user`
+-- Indeks untuk tabel `users`
 --
 ALTER TABLE `user`
   ADD PRIMARY KEY (`user_id`),
@@ -698,6 +741,12 @@ ALTER TABLE `product_size`
   MODIFY `size_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT untuk tabel `product_stock`
+--
+ALTER TABLE `product_stock`
+  MODIFY `stock_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
 -- AUTO_INCREMENT untuk tabel `product_variants`
 --
 ALTER TABLE `product_variants`
@@ -707,24 +756,26 @@ ALTER TABLE `product_variants`
 -- AUTO_INCREMENT untuk tabel `product_variant_options`
 --
 ALTER TABLE `product_variant_options`
-  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT untuk tabel `user`
+-- AUTO_INCREMENT untuk tabel `users`
 --
-ALTER TABLE `user`
+ALTER TABLE `users`
   MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
+ALTER TABLE `user`
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Ketidakleluasaan untuk tabel `orders`
 --
 ALTER TABLE `orders`
   ADD CONSTRAINT `fk_orders_walkincustomer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`);
+  ADD CONSTRAINT `fk_orders_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE;
 
 --
 -- Ketidakleluasaan untuk tabel `order_items`
@@ -759,6 +810,14 @@ ALTER TABLE `products`
   ADD CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `product_categories` (`category_id`) ON UPDATE CASCADE;
 
 --
+-- Ketidakleluasaan untuk tabel `product_stock`
+--
+ALTER TABLE `product_stock`
+  ADD CONSTRAINT `fk_product_stock_variant` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`variant_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_product_stock_size` FOREIGN KEY (`size_id`) REFERENCES `product_size` (`size_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_product_stock_color` FOREIGN KEY (`color_id`) REFERENCES `product_color` (`color_id`) ON UPDATE CASCADE;
+
+--
 -- Ketidakleluasaan untuk tabel `product_variants`
 --
 ALTER TABLE `product_variants`
@@ -771,6 +830,106 @@ ALTER TABLE `product_variant_options`
   ADD CONSTRAINT `product_variant_options_ibfk_1` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`variant_id`),
   ADD CONSTRAINT `product_variant_options_ibfk_2` FOREIGN KEY (`size_id`) REFERENCES `product_size` (`size_id`),
   ADD CONSTRAINT `product_variant_options_ibfk_3` FOREIGN KEY (`color_id`) REFERENCES `product_color` (`color_id`);
+
+--
+-- CHECK constraints for basic data integrity
+--
+ALTER TABLE `orders`
+  ADD CONSTRAINT `chk_orders_total_qty_nonnegative` CHECK (`total_qty` >= 0),
+  ADD CONSTRAINT `chk_orders_subtotal_nonnegative` CHECK (`subtotal` >= 0),
+  ADD CONSTRAINT `chk_orders_total_addon_nonnegative` CHECK (`total_addon` >= 0),
+  ADD CONSTRAINT `chk_orders_grand_total_nonnegative` CHECK (`grand_total` >= 0);
+
+ALTER TABLE `order_items`
+  ADD CONSTRAINT `chk_order_items_qty_positive` CHECK (`qty` > 0),
+  ADD CONSTRAINT `chk_order_items_harga_satuan_nonnegative` CHECK (`harga_satuan` >= 0),
+  ADD CONSTRAINT `chk_order_items_subtotal_nonnegative` CHECK (`subtotal` >= 0);
+
+ALTER TABLE `order_item_addons`
+  ADD CONSTRAINT `chk_order_item_addons_qty_positive` CHECK (`qty` > 0),
+  ADD CONSTRAINT `chk_order_item_addons_biaya_satuan_nonnegative` CHECK (`biaya_satuan` >= 0),
+  ADD CONSTRAINT `chk_order_item_addons_subtotal_nonnegative` CHECK (`subtotal` >= 0);
+
+ALTER TABLE `order_item_sizes`
+  ADD CONSTRAINT `chk_order_item_sizes_qty_positive` CHECK (`qty` > 0);
+
+ALTER TABLE `payments`
+  ADD CONSTRAINT `chk_payments_jumlah_bayar_positive` CHECK (`jumlah_bayar` > 0);
+
+ALTER TABLE `products`
+  ADD CONSTRAINT `chk_products_minimal_order_positive` CHECK (`minimal_order` IS NULL OR `minimal_order` > 0);
+
+ALTER TABLE `product_addons`
+  ADD CONSTRAINT `chk_product_addons_biaya_tambahan_nonnegative` CHECK (`biaya_tambahan` >= 0);
+
+ALTER TABLE `product_stock`
+  ADD CONSTRAINT `chk_product_stock_qty_nonnegative` CHECK (`qty` >= 0);
+
+ALTER TABLE `product_variants`
+  ADD CONSTRAINT `chk_product_variants_harga_start_from_nonnegative` CHECK (`harga_start_from` >= 0),
+  ADD CONSTRAINT `chk_product_variants_minimal_order_positive` CHECK (`minimal_order` IS NULL OR `minimal_order` > 0);
+
+--
+-- Diagnostic views for no-trigger architecture
+--
+CREATE OR REPLACE VIEW `v_order_calculated_totals` AS
+SELECT
+  o.order_id,
+  o.order_code,
+  COALESCE(items.calculated_total_qty, 0) AS calculated_total_qty,
+  COALESCE(items.calculated_subtotal, 0) AS calculated_subtotal,
+  COALESCE(addons.calculated_total_addon, 0) AS calculated_total_addon,
+  COALESCE(items.calculated_subtotal, 0) + COALESCE(addons.calculated_total_addon, 0) AS calculated_grand_total,
+  o.total_qty AS stored_total_qty,
+  o.subtotal AS stored_subtotal,
+  o.total_addon AS stored_total_addon,
+  o.grand_total AS stored_grand_total
+FROM `orders` o
+LEFT JOIN (
+  SELECT
+    `order_id`,
+    SUM(`qty`) AS calculated_total_qty,
+    SUM(`subtotal`) AS calculated_subtotal
+  FROM `order_items`
+  GROUP BY `order_id`
+) items ON items.order_id = o.order_id
+LEFT JOIN (
+  SELECT
+    oi.order_id,
+    SUM(oia.subtotal) AS calculated_total_addon
+  FROM `order_items` oi
+  JOIN `order_item_addons` oia ON oia.order_item_id = oi.order_item_id
+  GROUP BY oi.order_id
+) addons ON addons.order_id = o.order_id;
+
+CREATE OR REPLACE VIEW `v_order_payment_status` AS
+SELECT
+  o.order_id,
+  o.order_code,
+  o.grand_total,
+  COALESCE(SUM(CASE WHEN p.status_bayar = 'paid' THEN p.jumlah_bayar ELSE 0 END), 0) AS total_paid,
+  o.grand_total - COALESCE(SUM(CASE WHEN p.status_bayar = 'paid' THEN p.jumlah_bayar ELSE 0 END), 0) AS remaining_balance,
+  CASE
+    WHEN COALESCE(SUM(CASE WHEN p.status_bayar = 'paid' THEN p.jumlah_bayar ELSE 0 END), 0) = 0 THEN 'unpaid'
+    WHEN COALESCE(SUM(CASE WHEN p.status_bayar = 'paid' THEN p.jumlah_bayar ELSE 0 END), 0) < o.grand_total THEN 'partial'
+    WHEN COALESCE(SUM(CASE WHEN p.status_bayar = 'paid' THEN p.jumlah_bayar ELSE 0 END), 0) = o.grand_total THEN 'paid'
+    WHEN COALESCE(SUM(CASE WHEN p.status_bayar = 'paid' THEN p.jumlah_bayar ELSE 0 END), 0) > o.grand_total THEN 'overpaid'
+  END AS calculated_payment_status
+FROM `orders` o
+LEFT JOIN `payments` p ON p.order_id = o.order_id
+GROUP BY o.order_id, o.order_code, o.grand_total;
+
+CREATE OR REPLACE VIEW `v_order_item_size_check` AS
+SELECT
+  oi.order_item_id,
+  oi.order_id,
+  oi.qty AS item_qty,
+  COALESCE(SUM(ois.qty), 0) AS size_total_qty,
+  oi.qty - COALESCE(SUM(ois.qty), 0) AS difference
+FROM `order_items` oi
+LEFT JOIN `order_item_sizes` ois ON ois.order_item_id = oi.order_item_id
+GROUP BY oi.order_item_id, oi.order_id, oi.qty;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

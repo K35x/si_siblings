@@ -29,9 +29,12 @@ session_start();
                     <i class="fas fa-arrow-left"></i> Kembali ke Katalog
                 </a>
 
+                <?php include __DIR__ . '/../includes/validation-errors.php'; ?>
+
                 <h1 class="main-title">Konfigurasi Seragam Olahraga</h1>
             
                 <form action="<?= url('/transactions/cart') ?>" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="form_source" value="<?= e($formSource ?? 'sports-uniform') ?>">
                     <input type="hidden" name="kategori" value="Seragam Olahraga">
                     <!-- Harga dikunci 95k sesuai spek -->
                     <input type="hidden" id="paketBahan" value="95000">

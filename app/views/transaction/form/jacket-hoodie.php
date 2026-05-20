@@ -20,6 +20,8 @@
                     <i class="fas fa-arrow-left"></i> Kembali ke Katalog
                 </a>
 
+                <?php include __DIR__ . '/../includes/validation-errors.php'; ?>
+
                 <h1 class="main-title">Konfigurasi Jacket & Hoodie</h1>
                 <div class="form-container-full">
                     <p>Form detail Jacket & Hoodie belum tersedia. Silakan pilih kategori lain terlebih dahulu.</p>

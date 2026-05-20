@@ -12,94 +12,26 @@
 <body>
 
     <?php
-    $escape = static fn($value): string => htmlspecialchars(
-        (string) $value,
-        ENT_QUOTES,
-        "UTF-8",
-    );
-    $formatCurrency = static fn($amount): string => "Rp " .
-        number_format((float) $amount, 0, ",", ".");
-    $formatDate = static function ($value): string {
-        if (empty($value)) {
-            return "-";
-        }
-
-        try {
-            $date = new DateTime((string) $value);
-        } catch (Exception) {
-            return "-";
-        }
-        $months = [
-            1 => "Januari",
-            "Februari",
-            "Maret",
-            "April",
-            "Mei",
-            "Juni",
-            "Juli",
-            "Agustus",
-            "September",
-            "Oktober",
-            "November",
-            "Desember",
-        ];
-
-        return $date->format("d") .
-            " " .
-            $months[(int) $date->format("n")] .
-            " " .
-            $date->format("Y H:i");
-    };
     $statusMap = [
-        "selesai_pembayaran" => [
-            "label" => "Selesai Pembayaran",
-            "class" => "status-selesai",
-            "group" => "selesai",
+        "pending" => [
+            "label" => "Menunggu",
+            "class" => "status-proses",
+            "group" => "proses",
         ],
-        "proses_pesanan" => [
+        "processing" => [
             "label" => "Proses Pesanan",
             "class" => "status-proses",
             "group" => "proses",
         ],
-        "selesai_proses" => [
-            "label" => "Selesai Proses",
+        "done" => [
+            "label" => "Selesai",
             "class" => "status-selesai",
             "group" => "selesai",
         ],
-        "sudah_diambil_lunas" => [
-            "label" => "Sudah Diambil & Lunas",
-            "class" => "status-selesai",
-            "group" => "selesai",
-        ],
-        "selesai_pembayaran_dp" => [
-            "label" => "DP 50% Selesai",
+        "cancelled" => [
+            "label" => "Dibatalkan",
             "class" => "status-proses",
             "group" => "proses",
-        ],
-        "dp_50_selesai" => [
-            "label" => "DP 50% Selesai",
-            "class" => "status-proses",
-            "group" => "proses",
-        ],
-        "sedang_diproses" => [
-            "label" => "Proses Pesanan",
-            "class" => "status-proses",
-            "group" => "proses",
-        ],
-        "siap_diambil" => [
-            "label" => "Selesai Proses",
-            "class" => "status-selesai",
-            "group" => "selesai",
-        ],
-        "lunas_belum_diambil" => [
-            "label" => "Selesai Pembayaran",
-            "class" => "status-selesai",
-            "group" => "selesai",
-        ],
-        "lunas_sudah_diambil" => [
-            "label" => "Sudah Diambil & Lunas",
-            "class" => "status-selesai",
-            "group" => "selesai",
         ],
     ];
     $isOwner = ($sidebarRole ?? "kasir") === "owner";
@@ -171,37 +103,33 @@
                                 "class" => "status-proses",
                                 "group" => "proses",
                             ]; ?>
-                            <div class="order-card" data-status-group="<?= $escape(
+                            <div class="order-card" data-status-group="<?= e(
                                 $status["group"],
                             ) ?>">
-                                <div class="order-img-container">
-                                    <img src="https://www.dummyimage.com/100x100/000/fff" class="order-img" alt="Pesanan <?= $escape(
-                                        $transaction["order_code"],
-                                    ) ?>">
-                                </div>
                                 <div class="order-info">
-                                    <p>ID: <strong>#<?= $escape(
+                                    <p>ID: <strong>#<?= e(
                                         $transaction["order_code"],
                                     ) ?></strong></p>
-                                    <p>Nama Pelanggan: <strong><?= $escape(
+                                    <p>Nama Pelanggan: <strong><?= e(
                                         $transaction["customer_name"],
                                     ) ?></strong></p>
-                                    <p>Tanggal Order: <strong><?= $escape(
-                                        $formatDate(
+                                    <p>Tanggal Order: <strong><?= e(
+                                        format_date_id(
                                             $transaction["tanggal_order"],
+                                            true,
                                         ),
                                     ) ?></strong></p>
-                                    <p>Jumlah: <strong><?= $escape(
+                                    <p>Jumlah: <strong><?= e(
                                         $transaction["total_qty"],
                                     ) ?> pcs</strong></p>
-                                    <p>Total Harga: <span class="price-tag"><?= $escape(
-                                        $formatCurrency(
+                                    <p>Total Harga: <span class="price-tag"><?= e(
+                                        format_currency(
                                             $transaction["grand_total"],
                                         ),
                                     ) ?></span></p>
-                                    <div class="status-badge <?= $escape(
+                                    <div class="status-badge <?= e(
                                         $status["class"],
-                                    ) ?>"><?= $escape($status["label"]) ?></div>
+                                    ) ?>"><?= e($status["label"]) ?></div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -221,23 +149,21 @@
     <script>
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function() {
-        // 1. Ubah tampilan tombol yang aktif
         document.querySelector('.tab.active').classList.remove('active');
         this.classList.add('active');
 
         const filterValue = this.textContent.toLowerCase().trim();
         const cards = document.querySelectorAll('.order-card');
 
-        // 2. Filter kartu pesanan
         cards.forEach(card => {
             const statusGroup = card.dataset.statusGroup || 'semua';
 
             if (filterValue === 'semua') {
-                card.style.display = 'flex'; // Tampilkan semua
+                card.style.display = 'flex';
             } else if (statusGroup === filterValue) {
-                card.style.display = 'flex'; // Tampilkan yang cocok
+                card.style.display = 'flex';
             } else {
-                card.style.display = 'none'; // Sembunyikan yang beda
+                card.style.display = 'none';
             }
         });
     });

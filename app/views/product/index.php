@@ -1,3 +1,17 @@
+<?php
+$stocks = $stocks ?? [];
+$stockSummary = $stockSummary ?? ['total_qty' => 0, 'low_stock_qty' => 0, 'low_stock_items' => 0];
+$stockCategories = $stockCategories ?? [];
+$sidebarRole = $sidebarRole ?? 'owner';
+$activeMenu = $activeMenu ?? 'products';
+
+$groupedStocks = [];
+foreach ($stocks as $stock) {
+    $category = $stock['nama_kategori'] ?? 'Tanpa Kategori';
+    $variant = $stock['nama_varian'] ?? 'Tanpa Varian';
+    $groupedStocks[$category][$variant][] = $stock;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -306,6 +320,9 @@ include __DIR__ . '/../layouts/sidebar.php';
       <button class="btn" onclick="submitTambah()">Simpan</button>
     </div>
   </div>
+</div>
+</div>
+</div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════

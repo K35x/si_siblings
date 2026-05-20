@@ -1,8 +1,9 @@
 <?php
 $baseUrl = rtrim(url('/'), '/');
-$requestedRole = $_GET['role'] ?? null;
-$sessionRole = (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['role'])) ? $_SESSION['role'] : null;
-$role = $sidebarRole ?? ($sessionRole ?? ($requestedRole ?? 'kasir'));
+$sessionRole = (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user']['role']))
+    ? $_SESSION['user']['role']
+    : null;
+$role = resolve_sidebar_role($sidebarRole ?? null, $sessionRole ?? ($_GET['role'] ?? null));
 
 $menus = [
     'kasir' => [

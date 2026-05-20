@@ -2,6 +2,15 @@
 
 class TransactionController extends Controller
 {
+    private const ORDER_FORM_VIEWS = [
+        't-shirt' => 'transaction.form.t-shirt',
+        'work-uniform' => 'transaction.form.work-uniform',
+        'jersey' => 'transaction.form.jersey',
+        'polo-shirt' => 'transaction.form.polo-shirt',
+        'sports-uniform' => 'transaction.form.sports-uniform',
+        'jacket-hoodie' => 'transaction.form.jacket-hoodie',
+    ];
+
     private ?TransactionModel $transactions = null;
 
     public function index(): void
@@ -33,6 +42,47 @@ class TransactionController extends Controller
 
     public function cart(): void
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        if (isset($_GET['hapus'])) {
+            $id = (int) $_GET['hapus'];
+            if (isset($_SESSION['keranjang'][$id])) {
+                unset($_SESSION['keranjang'][$id]);
+                $_SESSION['keranjang'] = array_values($_SESSION['keranjang']);
+            }
+
+            header('Location: ' . url('/transactions/cart'));
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $validation = $this->transactions()->validateOrderPayloadBeforeSave($_POST);
+
+            if (!$validation['valid']) {
+                $formView = $this->resolveOrderFormView($_POST['form_source'] ?? null);
+                $this->view($formView, [
+                    'sidebarRole' => 'kasir',
+                    'activeMenu' => 'orders',
+                    'validationErrors' => $validation['errors'],
+                    'oldInput' => $validation['oldInput'],
+                ]);
+                return;
+            }
+
+            $item = $this->transactions()->buildCartItemFromPayload($_POST, $validation);
+
+            if (isset($_POST['index_edit']) && $_POST['index_edit'] !== '') {
+                $_SESSION['keranjang'][(int) $_POST['index_edit']] = $item;
+            } else {
+                $_SESSION['keranjang'][] = $item;
+            }
+
+            header('Location: ' . url('/transactions/cart'));
+            exit;
+        }
+
         $this->view('transaction.cart', [
             'sidebarRole' => 'kasir',
             'activeMenu' => 'cart',
@@ -77,12 +127,18 @@ class TransactionController extends Controller
         $this->productForm('jacket-hoodie');
     }
 
-    private function productForm(string $view): void
+    private function productForm(string $formSource): void
     {
-        $this->view('transaction.form.' . $view, [
+        $this->view(self::ORDER_FORM_VIEWS[$formSource], [
             'sidebarRole' => 'kasir',
             'activeMenu' => 'orders',
+            'formSource' => $formSource,
         ]);
+    }
+
+    private function resolveOrderFormView(?string $formSource): string
+    {
+        return self::ORDER_FORM_VIEWS[$formSource ?? ''] ?? 'transaction.cart';
     }
 
     private function transactions(): TransactionModel
@@ -96,9 +152,10 @@ class TransactionController extends Controller
 
     private function resolveSidebarRole(): string
     {
-        $sessionRole = (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['role'])) ? $_SESSION['role'] : null;
-        $role = $_GET['role'] ?? $sessionRole ?? 'kasir';
+        $sessionRole = (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user']['role']))
+            ? $_SESSION['user']['role']
+            : null;
 
-        return in_array($role, ['kasir', 'owner'], true) ? $role : 'kasir';
+        return resolve_sidebar_role($_GET['role'] ?? null, $sessionRole);
     }
 }
