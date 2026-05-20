@@ -666,7 +666,7 @@ ALTER TABLE `product_variant_options`
 --
 -- Indeks untuk tabel `users`
 --
-ALTER TABLE `users`
+ALTER TABLE `user`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `username` (`username`);
 
@@ -767,6 +767,8 @@ ALTER TABLE `users`
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
+ALTER TABLE `user`
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Ketidakleluasaan untuk tabel `orders`

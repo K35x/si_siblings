@@ -2,70 +2,198 @@
 
 class ProductModel extends Model
 {
-    public function stockList(): array
+    // ──────────────────────────────────────────────────────────────
+    // READ
+    // ──────────────────────────────────────────────────────────────
+
+    public function allCategories(): array
     {
-        $statement = $this->db->query(
-            'SELECT
-                ps.stock_id,
-                pc.category_id,
-                pc.nama_kategori,
-                p.product_id,
-                p.nama_produk,
+        return $this->db
+            ->query('SELECT * FROM product_categories WHERE aktif = 1 ORDER BY category_id')
+            ->fetchAll();
+    }
+
+    public function allVariants(): array
+    {
+        return $this->db->query('
+            SELECT
                 pv.variant_id,
+                pv.product_id,
                 pv.nama_varian,
                 pv.bahan,
-                s.size_id,
-                s.size_name,
-                c.color_id,
-                c.color_name,
-                ps.qty
-            FROM product_stock ps
-            JOIN product_variants pv ON pv.variant_id = ps.variant_id
-            JOIN products p ON p.product_id = pv.product_id
-            JOIN product_categories pc ON pc.category_id = p.category_id
-            JOIN product_size s ON s.size_id = ps.size_id
-            LEFT JOIN product_color c ON c.color_id = ps.color_id
-            WHERE p.aktif = 1 AND pv.aktif = 1 AND pc.aktif = 1
-            ORDER BY pc.nama_kategori, p.nama_produk, pv.nama_varian, s.size_id, c.color_name'
-        );
-
-        return $statement->fetchAll();
+                pv.tipe_sablon_bordir,
+                pv.harga_start_from,
+                pv.aktif          AS varian_aktif,
+                p.nama_produk,
+                p.minimal_order,
+                p.aktif           AS produk_aktif,
+                pc.category_id,
+                pc.nama_kategori
+            FROM product_variants pv
+            JOIN products           p  ON pv.product_id  = p.product_id
+            JOIN product_categories pc ON p.category_id  = pc.category_id
+            WHERE pv.aktif = 1
+              AND p.aktif  = 1
+              AND pc.aktif = 1
+            ORDER BY pc.category_id, p.product_id, pv.variant_id
+        ')->fetchAll();
     }
 
-    public function stockSummary(): array
+    public function allOptions(): array
     {
-        $statement = $this->db->query(
-            'SELECT
-                COALESCE(SUM(qty), 0) AS total_qty,
-                COALESCE(SUM(CASE WHEN qty <= 10 THEN qty ELSE 0 END), 0) AS low_stock_qty,
-                COALESCE(SUM(CASE WHEN qty <= 10 THEN 1 ELSE 0 END), 0) AS low_stock_items
-            FROM product_stock'
-        );
+        try {
+            return $this->db->query(
+                'SELECT
+                    pvo.option_id,
+                    pvo.variant_id,
+                    pvo.size_id,
+                    pvo.color_id,
+                    COALESCE(pvo.qty, 1) AS qty,
+                    ps.size_name,
+                    pc.color_name
+                FROM product_variant_options pvo
+                JOIN product_size  ps ON pvo.size_id  = ps.size_id
+                JOIN product_color pc ON pvo.color_id = pc.color_id
+                ORDER BY pvo.variant_id, ps.size_id, pc.color_id'
+            )->fetchAll();
+        } catch (PDOException $e) {
+            // Fallback for databases without `qty` column — return same structure with default qty=1
+            $rows = $this->db->query(
+                'SELECT
+                    pvo.option_id,
+                    pvo.variant_id,
+                    pvo.size_id,
+                    pvo.color_id,
+                    ps.size_name,
+                    pc.color_name
+                FROM product_variant_options pvo
+                JOIN product_size  ps ON pvo.size_id  = ps.size_id
+                JOIN product_color pc ON pvo.color_id = pc.color_id
+                ORDER BY pvo.variant_id, ps.size_id, pc.color_id'
+            )->fetchAll();
 
-        $summary = $statement->fetch();
+            // Normalize to include qty key with default 1
+            foreach ($rows as &$r) {
+                $r['qty'] = 1;
+            }
 
-        return [
-            'total_qty' => (int) ($summary['total_qty'] ?? 0),
-            'low_stock_qty' => (int) ($summary['low_stock_qty'] ?? 0),
-            'low_stock_items' => (int) ($summary['low_stock_items'] ?? 0),
-        ];
+            return $rows;
+        }
     }
 
-    public function categoriesWithStock(): array
+    public function allSizes(): array
     {
-        $statement = $this->db->query(
-            'SELECT
-                pc.nama_kategori,
-                COALESCE(SUM(ps.qty), 0) AS total_qty
-            FROM product_categories pc
-            JOIN products p ON p.category_id = pc.category_id
-            JOIN product_variants pv ON pv.product_id = p.product_id
-            JOIN product_stock ps ON ps.variant_id = pv.variant_id
-            WHERE pc.aktif = 1 AND p.aktif = 1 AND pv.aktif = 1
-            GROUP BY pc.category_id, pc.nama_kategori
-            ORDER BY pc.nama_kategori'
-        );
+        return $this->db
+            ->query('SELECT * FROM product_size ORDER BY size_id')
+            ->fetchAll();
+    }
 
-        return $statement->fetchAll();
+    public function allColors(): array
+    {
+        return $this->db
+            ->query('SELECT * FROM product_color ORDER BY color_id')
+            ->fetchAll();
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // CREATE
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Cari product_id yang sudah ada (category + nama), atau buat baru.
+     */
+    public function findOrCreateProduct(int $categoryId, string $namaProduk): int
+    {
+        $stmt = $this->db->prepare('
+            SELECT product_id FROM products
+            WHERE category_id = ? AND nama_produk = ?
+            LIMIT 1
+        ');
+        $stmt->execute([$categoryId, $namaProduk]);
+        $row = $stmt->fetch();
+
+        if ($row) {
+            return (int) $row['product_id'];
+        }
+
+        $this->db->prepare('
+            INSERT INTO products (category_id, nama_produk, deskripsi, minimal_order, aktif)
+            VALUES (?, ?, ?, 24, 1)
+        ')->execute([$categoryId, $namaProduk, $namaProduk]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    public function createVariant(int $productId, array $data): int
+    {
+        $this->db->prepare('
+            INSERT INTO product_variants
+                (product_id, nama_varian, bahan, tipe_sablon_bordir, harga_start_from, aktif)
+            VALUES (?, ?, ?, ?, ?, 1)
+        ')->execute([
+            $productId,
+            $data['nama_varian'],
+            $data['bahan']       ?? null,
+            $data['tipe_sablon'] ?? null,
+            $data['harga']       ?? 0,
+        ]);
+
+        return (int) $this->db->lastInsertId();
+    }
+
+    public function createOption(int $variantId, int $sizeId, int $colorId, int $qty = 1): void
+    {
+        $this->db->prepare('
+            INSERT INTO product_variant_options (variant_id, size_id, color_id, qty)
+            VALUES (?, ?, ?, ?)
+        ')->execute([$variantId, $sizeId, $colorId, $qty]);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // UPDATE
+    // ──────────────────────────────────────────────────────────────
+
+    public function updateVariant(int $variantId, array $data): void
+    {
+        $this->db->prepare('
+            UPDATE product_variants
+            SET nama_varian        = ?,
+                bahan              = ?,
+                tipe_sablon_bordir = ?,
+                harga_start_from   = ?
+            WHERE variant_id = ?
+        ')->execute([
+            $data['nama_varian'],
+            $data['bahan']       ?? null,
+            $data['tipe_sablon'] ?? null,
+            $data['harga']       ?? 0,
+            $variantId,
+        ]);
+    }
+
+    public function deleteOptionsByVariant(int $variantId): void
+    {
+        $this->db->prepare('
+            DELETE FROM product_variant_options WHERE variant_id = ?
+        ')->execute([$variantId]);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // DELETE
+    // ──────────────────────────────────────────────────────────────
+
+    /** Soft-delete: set aktif = 0 */
+    public function softDeleteVariant(int $variantId): void
+    {
+        $this->db->prepare('
+            UPDATE product_variants SET aktif = 0 WHERE variant_id = ?
+        ')->execute([$variantId]);
+    }
+
+    public function deleteOption(int $optionId): void
+    {
+        $this->db->prepare('
+            DELETE FROM product_variant_options WHERE option_id = ?
+        ')->execute([$optionId]);
     }
 }
