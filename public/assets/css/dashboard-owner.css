@@ -283,7 +283,6 @@ canvas {
 }
 
 /*MODAL AKTIVITAS*/
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -384,7 +383,6 @@ canvas {
   opacity: 0.9;
 }
 /* DEADLINE PRODUKSI MODERN */
-
 /* Card utama */
 .deadline-card {
   flex: 0.8;
