@@ -37,9 +37,12 @@ session_start();
                     <i class="fas fa-arrow-left"></i> Kembali ke Katalog
                 </a>
 
+                <?php include __DIR__ . '/../includes/validation-errors.php'; ?>
+
                 <h1 class="main-title">Konfigurasi Custom Polo Shirt</h1>
             
                 <form action="<?= url('/transactions/cart') ?>" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="form_source" value="<?= e($formSource ?? 'polo-shirt') ?>">
                     <input type="hidden" name="kategori" value="Polo Shirt">
                     
                     <div class="form-grid">

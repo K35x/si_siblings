@@ -2,6 +2,15 @@
 
 class TransactionController extends Controller
 {
+    private const ORDER_FORM_VIEWS = [
+        't-shirt' => 'transaction.form.t-shirt',
+        'work-uniform' => 'transaction.form.work-uniform',
+        'jersey' => 'transaction.form.jersey',
+        'polo-shirt' => 'transaction.form.polo-shirt',
+        'sports-uniform' => 'transaction.form.sports-uniform',
+        'jacket-hoodie' => 'transaction.form.jacket-hoodie',
+    ];
+
     private ?TransactionModel $transactions = null;
 
     // =========================
@@ -217,7 +226,7 @@ class TransactionController extends Controller
     // =========================
     private function productForm(string $view): void
     {
-        $this->view('transaction.form.' . $view, [
+        $this->view(self::ORDER_FORM_VIEWS[$formSource], [
             'sidebarRole' => 'kasir',
             'activeMenu'  => 'orders',
         ]);

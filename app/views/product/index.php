@@ -1,1728 +1,690 @@
+<?php
+$stocks = $stocks ?? [];
+$stockSummary = $stockSummary ?? ['total_qty' => 0, 'low_stock_qty' => 0, 'low_stock_items' => 0];
+$stockCategories = $stockCategories ?? [];
+$sidebarRole = $sidebarRole ?? 'owner';
+$activeMenu = $activeMenu ?? 'products';
+
+$groupedStocks = [];
+foreach ($stocks as $stock) {
+    $category = $stock['nama_kategori'] ?? 'Tanpa Kategori';
+    $variant = $stock['nama_varian'] ?? 'Tanpa Varian';
+    $groupedStocks[$category][$variant][] = $stock;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Siblings.co - Stok Produk</title>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="stylesheet" href="<?= asset('css/sidebar.css') ?>">
 <link rel="stylesheet" href="<?= asset('css/products.css') ?>">
 </head>
 <body>
 
+<?php
+// ──────────────────────────────────────────────────────────────────────────────
+// Susun data: grouping variant → per kategori → per varian → size×warna
+// Data dari controller: $categories, $variants, $options, $sizes, $colors
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Indeks options per variant_id: [variant_id => [size_id => [color_id => option_id]]]
+$optionMap = [];
+foreach ($options as $opt) {
+  $optionMap[$opt['variant_id']][$opt['size_id']][$opt['color_id']] = [
+    'option_id' => $opt['option_id'],
+    'qty'       => isset($opt['qty']) ? (int) $opt['qty'] : 1,
+  ];
+}
+
+// Susun kategori → produk → varian
+$grouped = []; // [category_id => ['nama' => ..., 'variants' => [...]]]
+foreach ($variants as $v) {
+    $cid = $v['category_id'];
+    if (!isset($grouped[$cid])) {
+        $grouped[$cid] = [
+            'nama'     => $v['nama_kategori'],
+            'variants' => [],
+        ];
+    }
+    $grouped[$cid]['variants'][] = $v;
+}
+
+// Helper: total option per varian
+function countOptions(array $optionMap, int $variantId): int {
+  if (!isset($optionMap[$variantId])) return 0;
+  $sum = 0;
+  foreach ($optionMap[$variantId] as $sizeMap) {
+    foreach ($sizeMap as $colorData) {
+      $sum += isset($colorData['qty']) ? (int) $colorData['qty'] : 1;
+    }
+  }
+  return $sum;
+}
+
+// Helper: mapping nama warna (dari DB) → kode hex CSS
+function colorNameToHex(string $name): string {
+    return match (mb_strtolower(trim($name))) {
+        'merah'          => '#ef4444',
+        'jingga', 'oranye', 'orange' => '#f97316',
+        'kuning'         => '#eab308',
+        'hijau'          => '#22c55e',
+        'biru'           => '#3b82f6',
+        'nila', 'indigo' => '#6366f1',
+        'ungu', 'violet' => '#8b5cf6',
+        'putih'          => '#ffffff',
+        'hitam'          => '#111827',
+        'abu', 'abu-abu', 'gray', 'grey' => '#9ca3af',
+        'pink', 'merah muda' => '#ec4899',
+        'coklat', 'brown'   => '#92400e',
+        'maroon'         => '#7f1d1d',
+        'tosca', 'teal'  => '#14b8a6',
+        'navy', 'biru tua' => '#1e3a5f',
+        default          => '#cbd5e1', // fallback abu muda
+    };
+}
+?>
 
 <div class="container">
 <?php
-$sidebarRole = 'owner';
-$activeMenu = 'products';
+$sidebarRole = $sidebarRole ?? 'owner';
+$activeMenu  = $activeMenu  ?? 'products';
 include __DIR__ . '/../layouts/sidebar.php';
 ?>
 
 <!-- MAIN -->
 <div class="main-content">
-
   <div class="header-photo"></div>
 
-<div class="content">
-    
-
-<!-- KANAN -->
-<div class="right">
-
-  <!-- HEADER -->
-  <div class="right-header">
-
-  <div class="header-left">
-    <h3><i class="fas fa-box"></i> Stok Barang</h3>
-  </div>
-
-  <div class="header-actions">
-</div>
-
-    <div style="display:flex; gap:10px;">
-      <select id="filterKategori">
-        <option value="">Semua</option>
-        <option value="T-shirt">T-shirt</option>
-        <option value="PDH">PDH</option>
-        <option value="Jersey">Jersey</option>
-        <option value="Polo Shirt">Polo Shirt</option>
-        <option value="Seragam Olahraga">Seragam Olahraga</option>
-        <option value="Jacket">Jacket</option>
-      </select>
-
-      <button class="btn" onclick="openModal()">+ Tambah</button>
-      <button class="btn" onclick="toggleDeleteMode()">Hapus</button>
-    </div>
-  </div>
-
-  <!-- WRAPPER -->
-  <div class="product-wrapper">
-    <!-- T-SHIRT -->
-    <div class="kategori-item" data-kategori="T-shirt">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span> T-shirt</span>
-        <span>160 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-      <div class="kain">
-      <div class="kain-title">Cotton Combed 24s</div>
-      <div class="ukuran-item">
-
-      <!-- Ringkasan ukuran -->
-      <div class="ukuran-row"><span>S</span><span>30 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-      <!-- Detail warna  -->
-      <div class="warna-list">
-        <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-      </div>    
-    </div>
-
-      <div class="ukuran-item">
-      <div class="ukuran-row"><span>M</span><span>30 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-      <div class="warna-list">
-        <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-      </div>    
-    </div>
-
-      <div class="ukuran-item">
-      <div class="ukuran-row"><span>L</span><span>30 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-      <div class="warna-list">
-        <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-      </div>    
-    </div>
-      
-      <div class="ukuran-item">
-      <div class="ukuran-row"><span>XL</span><span>30 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-      <div class="warna-list">
-        <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-      </div>    
-    </div>
-
-      <div class="ukuran-item">
-      <div class="ukuran-row"><span>XXL</span><span>30 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-      <div class="warna-list">
-        <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-      </div>    
-    </div>
-  </div>
-
-    <div class="kain">
-    <div class="kain-title">Cotton Carded</div>
-      <div class="ukuran-item">
-      <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-      <div class="warna-list">
-          <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        </div>    
-      </div>
-
-        <div class="ukuran-item">
-        <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-        <div class="warna-list">
-          <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        </div>    
-      </div>
-
-        <div class="ukuran-item">
-        <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-        <div class="warna-list">
-          <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        </div>    
-      </div>
-
-        <div class="ukuran-item">
-        <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-        <div class="warna-list">
-          <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        </div>    
-      </div>
-
-        <div class="ukuran-item">
-        <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-        <div class="warna-list">
-          <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-        </div>    
-      </div>
-    </div>
-
-        <div class="kain">
-          <div class="kain-title">Semi Cotton</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-          
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- PDH -->
-    <div class="kategori-item" data-kategori="PDH">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>PDH</span>
-        <span>60 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">American Drill</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-      </div>
-
-        <div class="kain">
-          <div class="kain-title">Union</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Nagata Drill</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-       </div>
-
-      </div>
-    </div>
-
-    <!-- JERSEY -->
-    <div class="kategori-item" data-kategori="Jersey">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Jersey</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Dryfit</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-      </div>  
-
-        <div class="kain">
-          <div class="kain-title">Embos</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Jaquard</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- POLO -->
-    <div class="kategori-item" data-kategori="Polo Shirt">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Polo Shirt</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Premium Cotton 24s</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-
-        <div class="kain">
-          <div class="kain-title">Lacoste 24s</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- SERAGAM -->
-    <div class="kategori-item" data-kategori="Seragam Olahraga">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Seragam Olahraga</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Semi Cotton</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- JACKET -->
-    <div class="kategori-item" data-kategori="Jacket">
-      <div class="kategori-header">
-        <input type="checkbox" class="pilih-hapus" style="display:none;">
-        <span>Jacket</span>
-        <span>80 pcs</span>
-      </div>
-
-      <div class="kategori-content">
-
-        <div class="kain">
-          <div class="kain-title">Custom</div>
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>S</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>M</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>L</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-
-          <div class="ukuran-item">
-          <div class="ukuran-row"><span>XXL</span><span>10 pcs</span><button class="btn-delete" title="Hapus ukuran S beserta semua warna"><i class="fas fa-trash"></i></button></div>
-          <div class="warna-list">
-            <div class="warna-row"><span>Merah</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Jingga</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Kuning</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hijau</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Biru</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Nila</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Ungu</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Putih</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-            <div class="warna-row"><span>Hitam</span><span>5 pcs</span><div class="aksi"><button class="btn-edit" title="Edit stok warna"><i class="fas fa-pen"></i></button><button class="btn-delete"><i class="fas fa-trash"></i></button></div></div>
-          </div>    
-        </div>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-
-    <h3>Tambah Produk</h3>
-
-      <!-- KATEGORI -->
-    <div class="input-group">
-      <label>Kategori</label>
-      <input list="listKategori" id="kategori" placeholder="Pilih atau ketik kategori">
-      <datalist id="listKategori">
-        <option value="Tshirt">
-        <option value="Jersey">
-        <option value="PDH">
-        <option value="Polo Shirt">
-        <option value="Seragam Olahraga">
-        <option value="Jacket">
-      </datalist>
-    </div>
-
-    <!-- KAIN -->
-    <div class="input-group">
-      <label>Jenis Kain</label>
-      <input list="listKain" id="kain" placeholder="Pilih atau ketik kain">
-      <datalist id="listKain">
-        <option value="Semi Cotton">
-        <option value="Cotton Carded">
-        <option value="Cotton Combed 24s">
-        <option value="Unione">
-        <option value="American Drill">
-        <option value="Nagata Drill">
-        <option value="Embos">
-        <option value="Jaquard">
-        <option value="Dryfit">
-        <option value="Premium Cotton 24s">
-        <option value="Lacoste 24s">
-      </datalist>
-    </div>
-
-    <!-- UKURAN -->
-    <div class="input-group">
-      <label>Ukuran</label>
-      <input list="listUkuran" id="ukuran" placeholder="S, M, L, XL...">
-      <datalist id="listUkuran">
-        <option value="S">
-        <option value="M">
-        <option value="L">
-        <option value="XL">
-        <option value="XXL">
-      </datalist>
-    </div>
-
-    <!-- STOK -->
-    <div class="input-group">
-      <label>Stok</label>
-      <input type="number" id="stok" placeholder="Jumlah stok">
-    </div>
-
-    <div class="modal-action">
-      <button class="btn" onclick="tambahProduk()">Simpan</button>
-      <button class="btn btn-cancel" onclick="closeModal()">Batal</button>
-    </div>
-
-  </div>
-</div>
-
-<script>
-// ACCORDION KATEGORI
-document.addEventListener("click", function (e) {
-  const header = e.target.closest(".kategori-header");
-  if (!header) return;
-
-  const content = header.nextElementSibling;
-  if (!content) return;
-
-  // Tutup semua kategori lain
-  document.querySelectorAll(".kategori-content").forEach((item) => {
-    if (item !== content) {
-      item.style.display = "none";
-
-      // Tutup semua kain & warna di kategori lain
-      item.querySelectorAll(".ukuran-item").forEach((ukuran) => {
-        ukuran.style.display = "none";
-      });
-
-      item.querySelectorAll(".warna-list").forEach((warna) => {
-        warna.style.display = "none";
-      });
-    }
-  });
-
-  // Toggle kategori yang dipilih
-  const isOpen = content.style.display === "block";
-  content.style.display = isOpen ? "none" : "block";
-
-  // Jika kategori ditutup, tutup semua kain & warna
-  if (isOpen) {
-    content.querySelectorAll(".ukuran-item").forEach((ukuran) => {
-      ukuran.style.display = "none";
-    });
-
-    content.querySelectorAll(".warna-list").forEach((warna) => {
-      warna.style.display = "none";
-    });
-  }
-});
-
-// TOGGLE JENIS KAIN
-// Klik satu kain -> kain lain tertutup
-document.addEventListener("click", function (e) {
-  // Abaikan jika klik elemen lain
-  if (
-    e.target.closest(".kategori-header") ||
-    e.target.closest(".ukuran-row") ||
-    e.target.closest(".btn-edit") ||
-    e.target.closest(".btn-delete")
-  ) {
-    return;
-  }
-
-  const kainTitle = e.target.closest(".kain-title");
-  if (!kainTitle) return;
-
-  const kain = kainTitle.closest(".kain");
-  const kategoriContent = kain.closest(".kategori-content");
-  if (!kain || !kategoriContent) return;
-
-  const ukuranItems = kain.querySelectorAll(".ukuran-item");
-
-  // Apakah kain ini sedang terbuka?
-  const isOpen = [...ukuranItems].some(
-    (item) => item.style.display !== "none"
-  );
-
-  // Tutup semua kain lain
-  kategoriContent.querySelectorAll(".kain").forEach((kainLain) => {
-    if (kainLain !== kain) {
-      kainLain.querySelectorAll(".ukuran-item").forEach((item) => {
-        item.style.display = "none";
-      });
-
-      kainLain.querySelectorAll(".warna-list").forEach((warna) => {
-        warna.style.display = "none";
-      });
-    }
-  });
-
-  // Toggle kain yang dipilih
-  ukuranItems.forEach((item) => {
-    item.style.display = isOpen ? "none" : "block";
-  });
-
-  // Saat membuka kain, pastikan semua warna tetap tertutup
-  kain.querySelectorAll(".warna-list").forEach((warna) => {
-    warna.style.display = "none";
-  });
-});
-
-// FILTER KATEGORI
-document
-  .getElementById("filterKategori")
-  .addEventListener("change", filterProduk);
-
-function filterProduk() {
-  const kategori = document.getElementById("filterKategori").value;
-
-  document.querySelectorAll(".kategori-item").forEach((item) => {
-    const cocok =
-      kategori === "" || item.dataset.kategori === kategori;
-
-    item.style.display = cocok ? "block" : "none";
-  });
-}
-
-// MODAL
-function openModal() {
-  document.getElementById("modal").style.display = "flex";
-}
-
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
-// TAMBAH PRODUK
-function tambahProduk() {
-  const kategori = document.getElementById("kategori").value.trim();
-  const kain = document.getElementById("kain").value.trim();
-  const ukuran = document.getElementById("ukuran").value.trim();
-  const stok = document.getElementById("stok").value.trim();
-
-  if (!kategori || !kain || !ukuran || !stok) {
-    alert("Isi semua data!");
-    return;
-  }
-
-  const wrapper = document.querySelector(".product-wrapper");
-
-  // Cari kategori
-  let kategoriEl = document.querySelector(
-    `.kategori-item[data-kategori="${kategori}"]`
-  );
-
-  // Jika kategori belum ada
-  if (!kategoriEl) {
-    wrapper.insertAdjacentHTML(
-      "beforeend",
-      `
-      <div class="kategori-item" data-kategori="${kategori}">
-        <div class="kategori-header">
-          <input type="checkbox" class="pilih-hapus" style="display:none;">
-          <span>${kategori}</span>
-          <span>0 pcs</span>
-        </div>
-        <div class="kategori-content" style="display:none;"></div>
-      </div>
-      `
-    );
-
-    kategoriEl = document.querySelector(
-      `.kategori-item[data-kategori="${kategori}"]`
-    );
-  }
-
-  const content = kategoriEl.querySelector(".kategori-content");
-
-  // Cari kain
-  let kainEl = [...content.querySelectorAll(".kain")].find(
-    (item) =>
-      item.querySelector(".kain-title").textContent.trim() === kain
-  );
-
-  // Jika kain belum ada
-  if (!kainEl) {
-    content.insertAdjacentHTML(
-      "beforeend",
-      `
-      <div class="kain">
-        <div class="kain-title">${kain}</div>
-      </div>
-      `
-    );
-
-    kainEl = [...content.querySelectorAll(".kain")].find(
-      (item) =>
-        item.querySelector(".kain-title").textContent.trim() === kain
-    );
-  }
-
-  // Tambah ukuran
-  kainEl.insertAdjacentHTML(
-    "beforeend",
-    `
-    <div class="ukuran-item" style="display:none;">
-      <div class="ukuran-row">
-        <span>${ukuran}</span>
-        <span>${stok} pcs</span>
-        <div class="aksi">
-          <button class="btn-delete" title="Hapus ukuran">
-            <i class="fas fa-trash"></i>
+  <div class="content">
+    <div class="right">
+
+      <!-- HEADER -->
+      <div class="right-header">
+        <div class="header-left">
+          <h3><i class="fas fa-box"></i> Stok Barang</h3>
+          <p>Manajemen produk & varian bahan</p>
+        </div>
+
+        <div class="header-actions">
+          <!-- Filter kategori -->
+          <select id="filterKategori" onchange="filterByKategori(this.value)">
+            <option value="">Semua Kategori</option>
+            <?php foreach ($categories as $cat): ?>
+            <option value="<?= $cat['category_id'] ?>">
+              <?= htmlspecialchars($cat['nama_kategori']) ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+
+          <button class="btn" onclick="openModalTambah()">
+            <i class="fas fa-plus"></i> Tambah
+          </button>
+          <button class="btn" id="btnHapusMode" onclick="toggleDeleteMode()">
+            <i class="fas fa-trash"></i> Hapus
           </button>
         </div>
       </div>
 
-      <div class="warna-list" style="display:none;">
-        <div class="warna-row">
-          <span>Default</span>
-          <span>${stok} pcs</span>
-          <div class="aksi">
-            <button class="btn-edit" title="Edit stok warna">
-              <i class="fas fa-pen"></i>
-            </button>
-            <button class="btn-delete" title="Hapus warna">
-              <i class="fas fa-trash"></i>
-            </button>
+      <!-- WRAPPER PRODUK -->
+      <div class="product-wrapper" id="productWrapper">
+
+        <?php if (empty($grouped)): ?>
+          <div style="text-align:center;padding:40px;color:#94a3b8;">
+            <i class="fas fa-box-open" style="font-size:40px;margin-bottom:10px;"></i>
+            <p>Belum ada data produk</p>
           </div>
-        </div>
-      </div>
+        <?php endif; ?>
+
+        <?php foreach ($grouped as $cid => $cat): ?>
+        <?php
+          // Hitung total option di seluruh varian kategori ini
+          $totalCat = 0;
+          foreach ($cat['variants'] as $v) {
+              $totalCat += countOptions($optionMap, $v['variant_id']);
+          }
+        ?>
+        <div class="kategori-item" data-category-id="<?= $cid ?>">
+          <div class="kategori-header" onclick="toggleKategori(this)">
+            <div class="left">
+              <input type="checkbox" class="pilih-hapus" style="display:none;"
+                     data-category-id="<?= $cid ?>"
+                     onclick="event.stopPropagation()">
+              <div class="icon"><i class="fas fa-tshirt"></i></div>
+              <span class="nama"><?= htmlspecialchars($cat['nama']) ?></span>
+            </div>
+            <div class="right">
+              <span class="total"><?= $totalCat ?> opsi</span>
+              <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+            </div>
+          </div>
+
+          <div class="kategori-content">
+            <?php foreach ($cat['variants'] as $v): ?>
+            <?php
+              $vid = $v['variant_id'];
+              $sizeGroups = $optionMap[$vid] ?? [];
+              $totalVariant = countOptions($optionMap, $vid);
+            ?>
+            <div class="kain" data-variant-id="<?= $vid ?>">
+              <!-- Header varian / bahan -->
+              <div class="kain-title" onclick="toggleKain(this)" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+                <span><?= htmlspecialchars($v['nama_varian']) ?>
+                  <small style="color:#94a3b8;font-size:12px;margin-left:8px;">(<?= $totalVariant ?> pcs)</small>
+                </span>
+                <div style="display:flex;gap:6px;" onclick="event.stopPropagation()">
+                  <button class="btn" style="padding:4px 10px;font-size:12px;"
+                          onclick="openModalEdit(<?= htmlspecialchars(json_encode($v)) ?>, <?= htmlspecialchars(json_encode($optionMap[$vid] ?? [])) ?>)">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button class="btn btn-cancel" style="padding:4px 10px;font-size:12px;"
+                          onclick="hapusVarian(<?= $vid ?>)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Info harga -->
+              <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">
+                Mulai Rp <?= number_format($v['harga_start_from'], 0, ',', '.') ?> &nbsp;|&nbsp;
+                Bahan: <?= htmlspecialchars($v['bahan'] ?? '-') ?>
+              </div>
+
+              <?php if (empty($sizeGroups)): ?>
+              <div style="font-size:13px;color:#cbd5e1;padding:8px 0;">
+                Belum ada ukuran & warna
+              </div>
+              <?php else: ?>
+
+              <?php foreach ($sizeGroups as $sid => $colorMap): ?>
+              <?php
+                $sizeName  = '';
+                foreach ($sizes as $sz) {
+                    if ($sz['size_id'] == $sid) { $sizeName = $sz['size_name']; break; }
+                }
+                $totalColors = count($colorMap);
+                $totalSizePcs = 0;
+                foreach ($colorMap as $cdata) { $totalSizePcs += isset($cdata['qty']) ? (int)$cdata['qty'] : 1; }
+              ?>
+              <div class="ukuran-item" data-size-id="<?= $sid ?>">
+                <div class="ukuran-row" onclick="toggleUkuran(this)" style="cursor:pointer;">
+                  <span><?= htmlspecialchars($sizeName) ?></span>
+                  <span><?= $totalColors ?> warna &bull; <?= $totalSizePcs ?> pcs</span>
+                  <div class="aksi">
+                    <button class="btn-delete" title="Hapus semua warna ukuran ini"
+                            onclick="event.stopPropagation(); hapusSemuaWarnaUkuran(<?= $vid ?>, <?= $sid ?>)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="warna-list" style="display:none;">
+                  <?php foreach ($colorMap as $cid2 => $optData): ?>
+                  <?php
+                    $colorName = '';
+                    foreach ($colors as $cl) {
+                        if ($cl['color_id'] == $cid2) { $colorName = $cl['color_name']; break; }
+                    }
+                    $dotHex    = colorNameToHex($colorName);
+                    $dotBorder = (mb_strtolower(trim($colorName)) === 'putih')
+                                 ? 'border:1px solid #d1d5db;' : '';
+                    $optId = is_array($optData) ? $optData['option_id'] : $optData;
+                    $qty   = is_array($optData) ? (int)($optData['qty'] ?? 1) : 1;
+                  ?>
+                  <div class="warna-row" data-option-id="<?= $optId ?>">
+                    <span style="--dot-color:<?= $dotHex ?>; --dot-border:<?= $dotBorder ?>;">
+                      <?= htmlspecialchars($colorName) ?>
+                    </span>
+                    <span style="color:#94a3b8;font-size:13px;"><?= $qty ?> pcs</span>
+                    <div class="aksi">
+                      <button class="btn-delete" title="Hapus warna ini"
+                              onclick="hapusOption(<?= $optId ?>, this)">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+              <?php endforeach; ?>
+              <?php endif; ?>
+
+            </div><!-- .kain -->
+            <?php endforeach; ?>
+          </div><!-- .kategori-content -->
+        </div><!-- .kategori-item -->
+        <?php endforeach; ?>
+
+      </div><!-- .product-wrapper -->
+    </div><!-- .right -->
+  </div><!-- .content -->
+</div><!-- .main-content -->
+</div><!-- .container -->
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODAL TAMBAH VARIAN
+══════════════════════════════════════════════════════════════ -->
+<div class="modal" id="modalTambah">
+  <div class="modal-content" style="max-width:420px;">
+    <h3><i class="fas fa-plus-circle" style="color:#4A3328;margin-right:8px;"></i>Tambah Varian</h3>
+
+    <div class="input-group">
+      <label>Kategori</label>
+      <select id="t_category_id" style="padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;outline:none;">
+        <?php foreach ($categories as $cat): ?>
+        <option value="<?= $cat['category_id'] ?>"><?= htmlspecialchars($cat['nama_kategori']) ?></option>
+        <?php endforeach; ?>
+      </select>
     </div>
-    `
-  );
 
-  updateAllUkuranTotals();
-  updateAllKategoriTotals();
+    <div class="input-group">
+      <label>Nama Produk</label>
+      <input type="text" id="t_nama_produk" placeholder="Contoh: Tshirt Basic">
+    </div>
 
-  // Reset form
-  document.getElementById("kategori").value = "";
-  document.getElementById("kain").value = "";
-  document.getElementById("ukuran").value = "";
-  document.getElementById("stok").value = "";
+    <div class="input-group">
+      <label>Nama Varian / Bahan</label>
+      <input type="text" id="t_nama_varian" placeholder="Contoh: Cotton Combed 24s">
+    </div>
 
-  closeModal();
-  filterProduk();
+    <div class="input-group">
+      <label>Bahan</label>
+      <input type="text" id="t_bahan" placeholder="Contoh: Cotton Combed 24s">
+    </div>
+
+    <div class="input-group">
+      <label>Tipe Sablon / Bordir</label>
+      <input type="text" id="t_tipe_sablon" placeholder="Contoh: Plastisol / DTF">
+    </div>
+
+    <div class="input-group">
+      <label>Harga Mulai Dari (Rp)</label>
+      <input type="number" id="t_harga" placeholder="Contoh: 62000" min="0">
+    </div>
+
+    <!-- Pilih ukuran & warna -->
+    <div class="input-group">
+      <label>Ukuran & Warna <small style="color:#94a3b8;">(boleh pilih lebih dari satu kombinasi)</small></label>
+      <div id="t_options_list" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
+      <button type="button" onclick="tambahBarisPilihan('t_options_list')"
+              style="margin-top:8px;padding:6px 12px;border:1px dashed #4A3328;border-radius:8px;background:transparent;color:#4A3328;cursor:pointer;font-size:13px;">
+        <i class="fas fa-plus"></i> Tambah Kombinasi
+      </button>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-cancel" onclick="closeModal('modalTambah')">Batal</button>
+      <button class="btn" onclick="submitTambah()">Simpan</button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODAL EDIT VARIAN
+══════════════════════════════════════════════════════════════ -->
+<div class="modal" id="modalEdit">
+  <div class="modal-content" style="max-width:420px;">
+    <h3><i class="fas fa-pen" style="color:#4A3328;margin-right:8px;"></i>Edit Varian</h3>
+    <input type="hidden" id="e_variant_id">
+
+    <div class="input-group">
+      <label>Nama Varian / Bahan</label>
+      <input type="text" id="e_nama_varian">
+    </div>
+
+    <div class="input-group">
+      <label>Bahan</label>
+      <input type="text" id="e_bahan">
+    </div>
+
+    <div class="input-group">
+      <label>Tipe Sablon / Bordir</label>
+      <input type="text" id="e_tipe_sablon">
+    </div>
+
+    <div class="input-group">
+      <label>Harga Mulai Dari (Rp)</label>
+      <input type="number" id="e_harga" min="0">
+    </div>
+
+    <!-- Pilih ukuran & warna -->
+    <div class="input-group">
+      <label>Ukuran & Warna</label>
+      <div id="e_options_list" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
+      <button type="button" onclick="tambahBarisPilihan('e_options_list')"
+              style="margin-top:8px;padding:6px 12px;border:1px dashed #4A3328;border-radius:8px;background:transparent;color:#4A3328;cursor:pointer;font-size:13px;">
+        <i class="fas fa-plus"></i> Tambah Kombinasi
+      </button>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-cancel" onclick="closeModal('modalEdit')">Batal</button>
+      <button class="btn" onclick="submitEdit()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     DATA UKURAN & WARNA (untuk JS dropdown)
+══════════════════════════════════════════════════════════════ -->
+<script>
+const SIZES  = <?= json_encode(array_values($sizes)) ?>;
+const COLORS = <?= json_encode(array_values($colors)) ?>;
+const ENDPOINTS = {
+  store: '<?= url('/products/store') ?>',
+  update: '<?= url('/products/update') ?>',
+  destroy: '<?= url('/products/destroy') ?>',
+  destroyOption: '<?= url('/products/destroy-option') ?>',
+};
+
+// ── TOGGLE ACCORDION ──────────────────────────────────────────
+function toggleKategori(header) {
+    const item = header.closest('.kategori-item');
+    item.classList.toggle('active');
 }
 
-// TOGGLE DETAIL WARNA
-// Klik satu ukuran -> ukuran lain tertutup
-document.addEventListener("click", function (e) {
-  if (
-    e.target.closest(".btn-edit") ||
-    e.target.closest(".btn-delete")
-  ) {
-    return;
-  }
+function toggleKain(title) {
+    const kain    = title.closest('.kain');
+    const content = kain.querySelectorAll('.ukuran-item');
+    const isOpen  = kain.classList.contains('active');
+    kain.classList.toggle('active');
+    content.forEach(el => el.style.display = isOpen ? 'none' : 'block');
+}
 
-  const ukuranRow = e.target.closest(".ukuran-row");
-  if (!ukuranRow) return;
+function toggleUkuran(row) {
+    const item   = row.closest('.ukuran-item');
+    const list   = item.querySelector('.warna-list');
+    if (!list) return;
+    list.style.display = list.style.display === 'none' ? 'flex' : 'none';
+}
 
-  const ukuranItem = ukuranRow.closest(".ukuran-item");
-  const warnaList = ukuranItem?.querySelector(".warna-list");
-  const kain = ukuranItem?.closest(".kain");
+// ── FILTER KATEGORI ───────────────────────────────────────────
+function filterByKategori(cid) {
+    document.querySelectorAll('.kategori-item').forEach(el => {
+        el.style.display = (!cid || el.dataset.categoryId == cid) ? '' : 'none';
+    });
+}
 
-  if (!ukuranItem || !warnaList || !kain) return;
+// ── MODAL ─────────────────────────────────────────────────────
+function openModalTambah() {
+    document.getElementById('t_nama_produk').value = '';
+    document.getElementById('t_nama_varian').value = '';
+    document.getElementById('t_bahan').value       = '';
+    document.getElementById('t_tipe_sablon').value = '';
+    document.getElementById('t_harga').value       = '';
+    document.getElementById('t_options_list').innerHTML = '';
+    tambahBarisPilihan('t_options_list');
+    showModal('modalTambah');
+}
 
-  const isOpen =
-    warnaList.style.display === "flex" ||
-    warnaList.style.display === "block";
+function openModalEdit(varian, optionMap) {
+    document.getElementById('e_variant_id').value   = varian.variant_id;
+    document.getElementById('e_nama_varian').value  = varian.nama_varian;
+    document.getElementById('e_bahan').value        = varian.bahan ?? '';
+    document.getElementById('e_tipe_sablon').value  = varian.tipe_sablon_bordir ?? '';
+    document.getElementById('e_harga').value        = varian.harga_start_from;
 
-  // Tutup semua warna lain
-  kain.querySelectorAll(".warna-list").forEach((item) => {
-    item.style.display = "none";
-  });
+    const list = document.getElementById('e_options_list');
+    list.innerHTML = '';
 
-  // Toggle warna yang dipilih
-  warnaList.style.display = isOpen ? "none" : "flex";
+    // Isi baris pilihan dari optionMap {size_id: {color_id: {option_id, qty}}}
+    let hasPilihan = false;
+    for (const [sizeId, colorMap] of Object.entries(optionMap)) {
+      for (const [colorId, optData] of Object.entries(colorMap)) {
+        const qty = (optData && optData.qty) ? parseInt(optData.qty) : 1;
+        tambahBarisPilihan('e_options_list', parseInt(sizeId), parseInt(colorId), qty);
+        hasPilihan = true;
+      }
+    }
+    if (!hasPilihan) tambahBarisPilihan('e_options_list');
+    showModal('modalEdit');
+}
+
+function showModal(id) {
+    const m = document.getElementById(id);
+    m.style.display = 'flex';
+}
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+// Tutup modal saat klik backdrop
+window.addEventListener('click', e => {
+    ['modalTambah', 'modalEdit'].forEach(id => {
+        if (e.target.id === id) closeModal(id);
+    });
 });
 
-// EDIT STOK WARNA
-document.addEventListener("click", function (e) {
-  const editBtn = e.target.closest(".btn-edit");
-  if (!editBtn) return;
+// ── BARIS PILIHAN UKURAN × WARNA ─────────────────────────────
+function tambahBarisPilihan(containerId, selectedSize = null, selectedColor = null, selectedQty = 1) {
+  const container = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;';
 
-  const row = editBtn.closest(".warna-row");
-  if (!row) return;
-
-  const stokEl = row.children[1];
-  const oldValue = stokEl.textContent.replace(" pcs", "").trim();
-
-  stokEl.innerHTML = `
-    <input
-      type="number"
-      value="${oldValue}"
-      min="0"
-      style="width:70px;"
-    >
-  `;
-
-  const input = stokEl.querySelector("input");
-  input.focus();
-  input.select();
-
-  function save() {
-    let value = parseInt(input.value);
-
-    if (isNaN(value) || value < 0) {
-      value = 0;
-    }
-
-    stokEl.textContent = value + " pcs";
-
-    const ukuranItem = row.closest(".ukuran-item");
-    if (ukuranItem) {
-      updateUkuranTotal(ukuranItem);
-    }
-
-    updateAllKategoriTotals();
-  }
-
-  input.addEventListener("blur", save);
-
-  input.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-      save();
-    }
+  const sizeSelect = document.createElement('select');
+  sizeSelect.style.cssText = 'flex:1;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;';
+  SIZES.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.size_id;
+    opt.textContent = s.size_name;
+    if (selectedSize && s.size_id == selectedSize) opt.selected = true;
+    sizeSelect.appendChild(opt);
   });
-});
 
-// HAPUS DATA
-document.addEventListener("click", function (e) {
-  const deleteBtn = e.target.closest(".btn-delete");
-  if (!deleteBtn) return;
+  const colorSelect = document.createElement('select');
+  colorSelect.style.cssText = 'flex:1;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;';
+  COLORS.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.color_id;
+    opt.textContent = c.color_name;
+    if (selectedColor && c.color_id == selectedColor) opt.selected = true;
+    colorSelect.appendChild(opt);
+  });
 
-  if (!confirm("Yakin ingin menghapus data ini?")) return;
+  const qtyInput = document.createElement('input');
+  qtyInput.type = 'number';
+  qtyInput.min = 1;
+  qtyInput.value = selectedQty || 1;
+  qtyInput.style.cssText = 'width:80px;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;';
 
-  // Hapus warna
-  const warnaRow = deleteBtn.closest(".warna-row");
-  if (warnaRow) {
-    const ukuranItem = warnaRow.closest(".ukuran-item");
-    warnaRow.remove();
+  const btnHapus = document.createElement('button');
+  btnHapus.type = 'button';
+  btnHapus.innerHTML = '<i class="fas fa-times"></i>';
+  btnHapus.style.cssText = 'padding:6px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:8px;cursor:pointer;';
+  btnHapus.onclick = () => row.remove();
 
-    if (ukuranItem.querySelectorAll(".warna-row").length === 0) {
-      ukuranItem.remove();
+  row.appendChild(sizeSelect);
+  row.appendChild(colorSelect);
+  row.appendChild(qtyInput);
+  row.appendChild(btnHapus);
+  container.appendChild(row);
+}
+
+function collectOptions(containerId) {
+    const rows = document.getElementById(containerId).querySelectorAll('div');
+    const opts = [];
+    rows.forEach(row => {
+        const selects = row.querySelectorAll('select');
+    if (selects.length >= 2) {
+      const qtyInput = row.querySelector('input[type="number"]');
+      const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+      opts.push({ size_id: parseInt(selects[0].value), color_id: parseInt(selects[1].value), qty });
+    }
+    });
+    return opts;
+}
+
+// ── SUBMIT TAMBAH ─────────────────────────────────────────────
+async function submitTambah() {
+    const payload = {
+        category_id : parseInt(document.getElementById('t_category_id').value),
+        nama_produk : document.getElementById('t_nama_produk').value.trim(),
+        nama_varian : document.getElementById('t_nama_varian').value.trim(),
+        bahan       : document.getElementById('t_bahan').value.trim(),
+        tipe_sablon : document.getElementById('t_tipe_sablon').value.trim(),
+        harga       : parseFloat(document.getElementById('t_harga').value) || 0,
+        options     : collectOptions('t_options_list'),
+    };
+
+    if (!payload.nama_produk || !payload.nama_varian) {
+        alert('Nama produk dan nama varian wajib diisi!'); return;
+    }
+
+    const res  = await fetch(ENDPOINTS.store, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+        closeModal('modalTambah');
+        location.reload();
     } else {
-      updateUkuranTotal(ukuranItem);
+        alert('Gagal menyimpan: ' + json.message);
     }
-
-    cleanupEmptyParents();
-    updateAllKategoriTotals();
-    return;
-  }
-
-  // Hapus ukuran
-  const ukuranRow = deleteBtn.closest(".ukuran-row");
-  if (ukuranRow) {
-    ukuranRow.closest(".ukuran-item")?.remove();
-
-    cleanupEmptyParents();
-    updateAllKategoriTotals();
-  }
-});
-
-// UPDATE TOTAL SATU UKURAN
-function updateUkuranTotal(ukuranItem) {
-  let total = 0;
-
-  ukuranItem.querySelectorAll(".warna-row").forEach((row) => {
-    const stok =
-      parseInt(
-        row.children[1].textContent.replace(" pcs", "").trim()
-      ) || 0;
-
-    total += stok;
-  });
-
-  const stokUkuranEl = ukuranItem.querySelector(
-    ".ukuran-row span:nth-child(2)"
-  );
-
-  if (stokUkuranEl) {
-    stokUkuranEl.textContent = total + " pcs";
-  }
 }
 
-// UPDATE SEMUA UKURAN
-function updateAllUkuranTotals() {
-  document.querySelectorAll(".ukuran-item").forEach(
-    updateUkuranTotal
-  );
+// ── SUBMIT EDIT ───────────────────────────────────────────────
+async function submitEdit() {
+    const payload = {
+        variant_id  : parseInt(document.getElementById('e_variant_id').value),
+        nama_varian : document.getElementById('e_nama_varian').value.trim(),
+        bahan       : document.getElementById('e_bahan').value.trim(),
+        tipe_sablon : document.getElementById('e_tipe_sablon').value.trim(),
+        harga       : parseFloat(document.getElementById('e_harga').value) || 0,
+        options     : collectOptions('e_options_list'),
+    };
+
+    const res  = await fetch(ENDPOINTS.update, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+        closeModal('modalEdit');
+        location.reload();
+    } else {
+        alert('Gagal menyimpan: ' + json.message);
+    }
 }
 
-// UPDATE TOTAL KATEGORI
-function updateAllKategoriTotals() {
-  document.querySelectorAll(".kategori-item").forEach(
-    (kategori) => {
-      let total = 0;
+// ── HAPUS VARIAN (soft delete) ────────────────────────────────
+async function hapusVarian(variantId) {
+    if (!confirm('Yakin ingin menonaktifkan varian ini?')) return;
 
-      kategori
-        .querySelectorAll(".ukuran-row span:nth-child(2)")
-        .forEach((stokEl) => {
-          total +=
-            parseInt(
-              stokEl.textContent.replace(" pcs", "").trim()
-            ) || 0;
+    const res  = await fetch(ENDPOINTS.destroy, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variant_id: variantId }),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+        location.reload();
+    } else {
+        alert('Gagal menghapus: ' + json.message);
+    }
+}
+
+// ── HAPUS SATU WARNA (option_id) ─────────────────────────────
+async function hapusOption(optionId, btn) {
+    if (!confirm('Hapus warna ini?')) return;
+
+    const res  = await fetch(ENDPOINTS.destroyOption, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ option_id: optionId }),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+        btn.closest('.warna-row').remove();
+    } else {
+        alert('Gagal menghapus: ' + json.message);
+    }
+}
+
+// ── HAPUS SEMUA WARNA DALAM SATU UKURAN ──────────────────────
+async function hapusSemuaWarnaUkuran(variantId, sizeId) {
+    if (!confirm('Hapus semua warna pada ukuran ini?')) return;
+
+    // Kumpulkan semua option_id di ukuran ini
+    // Kita fetch dari DOM (sudah ada data-option-id)
+    const item    = event.target.closest('.ukuran-item') ||
+                    document.querySelector(`[data-variant-id="${variantId}"] [data-size-id="${sizeId}"]`);
+    const rows    = item ? item.querySelectorAll('.warna-row') : [];
+    const optIds  = [...rows].map(r => parseInt(r.dataset.optionId)).filter(Boolean);
+
+    for (const oid of optIds) {
+        await fetch(ENDPOINTS.destroyOption, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ option_id: oid }),
         });
-
-      const totalEl = kategori.querySelector(
-        ".kategori-header span:last-child"
-      );
-
-      if (totalEl) {
-        totalEl.textContent = total + " pcs";
-      }
     }
-  );
+    location.reload();
 }
 
-// BERSIHKAN KAIN / KATEGORI KOSONG
-function cleanupEmptyParents() {
-  document.querySelectorAll(".kain").forEach((kain) => {
-    if (!kain.querySelector(".ukuran-item")) {
-      kain.remove();
-    }
-  });
-
-  document.querySelectorAll(".kategori-item").forEach(
-    (kategori) => {
-      if (!kategori.querySelector(".kain")) {
-        kategori.remove();
-      }
-    }
-  );
-}
-
-// MODE HAPUS KATEGORI
+// ── MODE HAPUS KATEGORI (checkbox) ───────────────────────────
 let deleteMode = false;
-
 function toggleDeleteMode() {
-  deleteMode = !deleteMode;
+    deleteMode = !deleteMode;
+    const btn  = document.getElementById('btnHapusMode');
 
-  document.querySelectorAll(".pilih-hapus").forEach(
-    (checkbox) => {
-      checkbox.style.display =
-        deleteMode ? "inline-block" : "none";
-      checkbox.checked = false;
+    document.querySelectorAll('.pilih-hapus').forEach(cb => {
+        cb.style.display = deleteMode ? 'inline-block' : 'none';
+        cb.checked = false;
+    });
+
+    if (deleteMode) {
+        btn.style.background = '#fee2e2';
+        btn.style.color = '#dc2626';
+        if (!document.getElementById('hapusTerpilih')) {
+            const b = document.createElement('button');
+            b.id = 'hapusTerpilih';
+            b.className = 'btn';
+            b.style.background = '#dc2626';
+            b.style.color = '#fff';
+            b.innerHTML = '<i class="fas fa-trash"></i> Hapus Terpilih';
+            b.onclick = hapusTerpilih;
+            document.querySelector('.header-actions').appendChild(b);
+        }
+    } else {
+        btn.style.background = '';
+        btn.style.color = '';
+        document.getElementById('hapusTerpilih')?.remove();
     }
-  );
-
-  deleteMode ? showDeleteBtn() : removeDeleteBtn();
 }
 
-// TAMPILKAN TOMBOL HAPUS TERPILIH
-function showDeleteBtn() {
-  if (document.getElementById("hapusTerpilih")) return;
+async function hapusTerpilih() {
+    const checked = [...document.querySelectorAll('.pilih-hapus:checked')];
+    if (!checked.length) { alert('Pilih kategori terlebih dahulu!'); return; }
+    if (!confirm(`Nonaktifkan ${checked.length} varian dalam kategori terpilih?`)) return;
 
-  const btn = document.createElement("button");
-  btn.id = "hapusTerpilih";
-  btn.className = "btn";
-  btn.textContent = "Hapus Terpilih";
-  btn.onclick = hapusTerpilih;
-
-  document
-    .querySelector(".header-actions")
-    .appendChild(btn);
+    // Kumpulkan semua variant_id dalam kategori yang di-check
+    for (const cb of checked) {
+        const kategoriEl = cb.closest('.kategori-item');
+        const variantEls = kategoriEl.querySelectorAll('[data-variant-id]');
+        for (const el of variantEls) {
+            await fetch(ENDPOINTS.destroy, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ variant_id: parseInt(el.dataset.variantId) }),
+            });
+        }
+    }
+    location.reload();
 }
-
-// HAPUS TOMBOL HAPUS TERPILIH
-function removeDeleteBtn() {
-  document.getElementById("hapusTerpilih")?.remove();
-}
-
-// HAPUS KATEGORI TERPILIH
-function hapusTerpilih() {
-  const checked = document.querySelectorAll(
-    ".pilih-hapus:checked"
-  );
-
-  if (checked.length === 0) {
-    alert("Pilih kategori terlebih dahulu!");
-    return;
-  }
-
-  if (!confirm("Yakin ingin menghapus kategori terpilih?")) {
-    return;
-  }
-
-  checked.forEach((checkbox) => {
-    checkbox.closest(".kategori-item").remove();
-  });
-
-  toggleDeleteMode();
-}
-
-// KLIK DI LUAR MODAL
-window.addEventListener("click", function (e) {
-  if (e.target.id === "modal") {
-    closeModal();
-  }
-});
-
-// INISIALISASI
-document.addEventListener("DOMContentLoaded", function () {
-  // Sembunyikan semua ukuran saat awal
-  document.querySelectorAll(".ukuran-item").forEach((item) => {
-    item.style.display = "none";
-  });
-
-  // Sembunyikan semua warna saat awal
-  document.querySelectorAll(".warna-list").forEach((item) => {
-    item.style.display = "none";
-  });
-
-  // Hitung ulang total
-  updateAllUkuranTotals();
-  updateAllKategoriTotals();
-});
 </script>
-</scrpt>
 
 </body>
 </html>

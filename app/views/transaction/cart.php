@@ -217,6 +217,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <h1 class="main-title">Keranjang Pesanan</h1>
                 <p class="subtitle">Berikut adalah daftar item yang akan dipesan.</p>
 
+                <?php if (!empty($validationErrors)): ?>
+                    <div class="alert alert-danger" style="background:#fdecea;color:#b71c1c;border:1px solid #f5c2c7;border-radius:6px;padding:12px;margin:12px 0;">
+                        <strong>Input pesanan belum valid.</strong>
+                        <ul style="margin:8px 0 0 18px;">
+                            <?php foreach ($validationErrors as $message): ?>
+                                <li><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($oldInput)): ?>
+                    <div class="alert alert-warning" style="background:#fff8e1;color:#6d4c41;border:1px solid #ffe082;border-radius:6px;padding:12px;margin:12px 0;">
+                        Data input lama masih tersedia untuk diperbaiki. Silakan kembali ke form produk dan submit ulang setelah koreksi.
+                    </div>
+                <?php endif; ?>
+
                 <div class="cart-card">
                     <table class="cart-table">
                         <thead>
