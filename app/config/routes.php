@@ -16,11 +16,13 @@ return [
     '/transactions/form/poloshirt'    => [TransactionController::class, 'poloshirt'],
     '/transactions/form/seragamolahraga' => [TransactionController::class, 'seragamolahraga'],
     '/transactions/form/jackethoodie' => [TransactionController::class, 'jackethoodie'],
+    '/products' => [ProductController::class, 'index'],
+    '/finance' => [FinanceController::class, 'index'],
+    '/transactions/invoice' => [TransactionController::class, 'invoice'],
     '/products'                       => [ProductController::class, 'index'],
     '/products/store'                 => [ProductController::class, 'store'],         // POST
     '/products/update'                => [ProductController::class, 'update'],        // POST
     '/products/destroy'               => [ProductController::class, 'destroy'],       // POST
     '/products/destroy-option'        => [ProductController::class, 'destroyOption'], // POST
-
     '/finance'                        => [FinanceController::class, 'index'],
 ];

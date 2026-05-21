@@ -1,6 +1,19 @@
 <?php
 session_start();
 ?>
+
+<form method="POST" action="<?= url('/transactions/cart') ?>">
+
+    <input type="hidden" name="kategori" value="T-Shirt / Kaos">
+
+<input
+    type="hidden"
+    name="index_edit"
+    value="<?= $_SESSION['edit_index'] ?? ''; ?>"
+>
+
+</form>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -29,7 +42,9 @@ session_start();
                 <h1 class="main-title">Konfigurasi Custom T-Shirt</h1>
             
                 <form action="<?= url('/transactions/cart') ?>" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="form_source" value="<?= e($formSource ?? 't-shirt') ?>">
+                    <input type="hidden" name="kategori" value="Seragam Olahraga">
+
+
                     <div class="form-grid">
     
                         <!-- Section Kiri: Produksi & Desain -->
@@ -57,11 +72,6 @@ session_start();
                                     <select name="jenis_sablon" id="jenisSablon" required>
                                         <option value="">Pilih paket harga...</option>
                                     </select>
-                                </div>
-
-                                <div class="input-group">
-                                    <label>Warna Kain</label>
-                                    <input type="text" name="warna_kain" required>
                                 </div>
 
                                 <!-- Bagian Upload -->
@@ -99,31 +109,46 @@ session_start();
                                 <table class="size-table">
                                     <thead>
                                         <tr>
-                                            <th>Size</th>
-                                            <th>Pendek</th>
-                                            <th>Panjang (+5k)</th>
+                                            <th style="width: 15%;">Size</th>
+                                            <th style="width: 20%;">Jumlah Qty</th>
+                                            <th style="width: 65%;">Keterangan Warna Berbeda</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 6px 10px;">
+                                                <span class="section-label-lengan">LENGAN PENDEK</span>
+                                            </td>
+                                        </tr>
                                         <?php 
                                         $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                         foreach($sizes as $sz): 
-                                            $isXXL = ($sz == 'XXL') ? 'data-xxl="5000"' : 'data-xxl="0"';
+                                            $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
                                         ?>
                                         <tr>
-                                            <td>
-                                                <strong><?php echo $sz; ?></strong>
-                                                <?php if($sz == 'XXL'): ?>
-                                                    <br><small style="color: #d32f2f;">(+5k Big Size)</small>
-                                                <?php endif; ?>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
+                                            <td><input type="number" name="qty_short_<?php echo $sz; ?>" class="qty-input short" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_short_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> pendek..."></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 15px 10px 6px 10px;">
+                                                <span class="section-label-lengan" style="background: #a39382;"> LENGAN PANJANG (+10K)</span>
                                             </td>
-                                            <td><input type="number" name="qty_short_<?php echo $sz; ?>" class="qty-input short" min="0" value="0" <?php echo $isXXL; ?> onchange="calculateTotal()"></td>
-                                            <td><input type="number" name="qty_long_<?php echo $sz; ?>" class="qty-input long" min="0" value="0" <?php echo $isXXL; ?> onchange="calculateTotal()"></td>
+                                        </tr>
+                                        <?php 
+                                        foreach($sizes as $sz): 
+                                            $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
+                                        ?>
+                                        <tr>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
+                                            <td><input type="number" name="qty_long_<?php echo $sz; ?>" class="qty-input long" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_long_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> panjang..."></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
-
                                 <div class="order-summary-box">
                                     <div class="status-row"><span>Total Qty:</span> <span id="totalQty">0</span> / 24 Pcs</div>
                                     <div class="status-row"><span>Estimasi:</span> <span id="totalHarga" style="color: #2e7d32; font-weight: bold; font-size: 1.2em;">Rp 0</span></div>

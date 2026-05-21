@@ -110,8 +110,8 @@
                                     <p>ID: <strong>#<?= e(
                                         $transaction["order_code"],
                                     ) ?></strong></p>
-                                    <p>Nama Pelanggan: <strong><?= e(
-                                        $transaction["customer_name"],
+                                    <p>Nama Pelanggan: <strong><?= $escape(
+                                        $transaction["nama"],
                                     ) ?></strong></p>
                                     <p>Tanggal Order: <strong><?= e(
                                         format_date_id(

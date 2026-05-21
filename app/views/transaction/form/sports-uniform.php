@@ -1,6 +1,18 @@
 <?php
 session_start();
 ?>
+
+<form method="POST" action="<?= url('/transactions/cart') ?>">
+
+    <input type="hidden" name="kategori" value="Seragam Olahraga">
+
+<input
+    type="hidden"
+    name="index_edit"
+    value="<?= $_SESSION['edit_index'] ?? ''; ?>"
+>
+</form>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -10,11 +22,6 @@ session_start();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/transaction-form.css') ?>">
-    <style>
-        .status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .status-values { display: flex; gap: 10px; min-width: 80px; justify-content: flex-end; }
-        .readonly-input { background-color: #f0f0f0; cursor: not-allowed; }
-    </style>
 </head>
 <body>
 
@@ -67,12 +74,6 @@ session_start();
                                     <label>BAHAN TRAINING (OTOMATIS)</label>
                                     <input type="text" name="bahan_training" value="Bahan Diadora" class="readonly-input" readonly>
                                 </div>
-
-                                <div class="input-group">
-                                    <label>WARNA SERAGAM & TRAINING</label>
-                                    <input type="text" name="warna_kain" required placeholder="Contoh: Baju Biru, Training Hitam">
-                                </div>
-
                                <div class="design-upload-section">
                                     <div class="card-header" style="background: #6d4c41; color: white; margin: 0 -20px 15px -20px; padding: 8px 20px; font-size: 0.9em;">
                                         <i class="fas fa-image"></i> Upload Referensi Desain
@@ -103,25 +104,45 @@ session_start();
                         <div class="form-card">
                             <div class="card-header"><i class="fas fa-list-ol"></i> Rincian Ukuran</div>
                             <div class="card-body">
-                                <table class="size-table">
+                               <table class="size-table">
                                     <thead>
                                         <tr>
-                                            <th>Size</th>
-                                            <th>Pendek</th>
-                                            <th>Panjang (+5k)</th>
+                                            <th style="width: 15%;">Size</th>
+                                            <th style="width: 20%;">Jumlah Qty</th>
+                                            <th style="width: 65%;">Keterangan Warna Berbeda</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 6px 10px;">
+                                                <span class="section-label-lengan">LENGAN PENDEK</span>
+                                            </td>
+                                        </tr>
                                         <?php 
-                                        $sizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                                        $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                         foreach($sizes as $sz): 
-                                            // Tambahan 5k untuk size di atas XXL (XXXL) sesuai gambar
-                                            $isBigSize = ($sz == 'XXXL') ? 'data-bigsize="5000"' : 'data-bigsize="0"';
+                                            $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
                                         ?>
                                         <tr>
-                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXXL') ? '<br><small>(+5k)</small>' : ''; ?></td>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
                                             <td><input type="number" name="qty_short_<?php echo $sz; ?>" class="qty-input short" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_short_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> pendek..."></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+
+                                        <tr>
+                                            <td colspan="3" class="text-left" style="background: #fafafa; padding: 15px 10px 6px 10px;">
+                                                <span class="section-label-lengan" style="background: #a39382;"> LENGAN PANJANG (+10K)</span>
+                                            </td>
+                                        </tr>
+                                        <?php 
+                                        foreach($sizes as $sz): 
+                                            $isBigSize = ($sz == 'XXL') ? 'data-xxl="10000"' : 'data-xxl="0"';
+                                        ?>
+                                        <tr>
+                                            <td><strong><?php echo $sz; ?></strong> <?php echo ($sz == 'XXL') ? '<br><small style="color:red; font-weight:bold;">(+10k)</small>' : ''; ?></td>
                                             <td><input type="number" name="qty_long_<?php echo $sz; ?>" class="qty-input long" min="0" value="0" <?php echo $isBigSize; ?> onchange="calculateTotal()"></td>
+                                            <td><input type="text" name="warna_long_<?php echo $sz; ?>" class="warna-input-inline" placeholder="Warna khusus size <?php echo $sz; ?> panjang..."></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
