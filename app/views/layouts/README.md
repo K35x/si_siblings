@@ -9,7 +9,6 @@ Folder ini berisi layout halaman besar dan komponen bersama yang digunakan oleh 
 - `auth.php` : halaman login.
 - `cashier.php` : dashboard kasir.
 - `owner.php` : dashboard owner.
-- `header.php` : komponen header umum.
 - `sidebar.php` : sidebar reusable berbasis role kasir/owner.
 
 ## Catatan

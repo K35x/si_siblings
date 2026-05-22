@@ -27,7 +27,19 @@ if (!function_exists('url')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        return url('/assets/' . ltrim($path, '/'));
+        $relative = ltrim($path, '/');
+        $baseDir  = realpath(__DIR__ . '/../../public/assets');
+
+        // Reject path traversal
+        if ($baseDir === false || str_contains($relative, '..')) {
+            return url('/assets/' . $relative);
+        }
+
+        $absolute = $baseDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        $version  = is_file($absolute) ? filemtime($absolute) : null;
+
+        $url = url('/assets/' . $relative);
+        return $version ? $url . '?v=' . $version : $url;
     }
 }
 
@@ -78,6 +90,20 @@ if (!function_exists('format_date_id')) {
         ];
 
         return $date->format('d') . ' ' . $months[(int) $date->format('n')] . ' ' . $date->format('Y H:i');
+    }
+}
+
+if (!function_exists('countOptions')) {
+    function countOptions(array $optionMap, int $variantId): int
+    {
+        if (!isset($optionMap[$variantId])) return 0;
+        $sum = 0;
+        foreach ($optionMap[$variantId] as $sizeMap) {
+            foreach ($sizeMap as $colorData) {
+                $sum += isset($colorData['qty']) ? (int) $colorData['qty'] : 1;
+            }
+        }
+        return $sum;
     }
 }
 

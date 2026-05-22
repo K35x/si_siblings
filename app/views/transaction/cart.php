@@ -1,314 +1,169 @@
 <?php
-session_start();
+$pageTitle = 'Keranjang Pesanan - Siblings.co';
+$pageStyles = ['transactions.css', 'transaction-cart.css'];
 
-// =========================
-// HARGA PER PCS
-// =========================
-$harga_per_pcs = 60000;
-
-
-// =========================
-// ROUTE CATEGORY
-// =========================
-function getCategoryRoute($kategori)
-{
-    return match ($kategori) {
-
-        'T-Shirt / Kaos'        => '/transactions/form/tshirt',
-        'Jersey'         => '/transactions/form/jersey',
-        'Polo Shirt'     => '/transactions/form/poloshirt',
-        'Seragam Olahraga' => '/transactions/form/seragamolahraga',
-        'PDH / Kemeja'   => '/transactions/form/pdh',
-        'Jacket & Hoodie'         => '/transactions/form/jackethoodie',
-
-        default          => '/transactions/categories',
-    };
+$keranjang = $_SESSION['keranjang'] ?? [];
+$grandTotal = 0;
+foreach ($keranjang as $item) {
+    $grandTotal += (float) ($item['harga'] ?? 0);
 }
 
-
-// =========================
-// HAPUS ITEM
-// =========================
-if (isset($_GET['hapus'])) {
-
-    $id = $_GET['hapus'];
-
-    if (isset($_SESSION['keranjang'][$id])) {
-        unset($_SESSION['keranjang'][$id]);
-
-        $_SESSION['keranjang'] = array_values($_SESSION['keranjang']);
-    }
-
-    header('Location: ' . url('/transactions/cart'));
-    exit();
-}
-
-
-// =========================
-// EDIT ITEM
-// =========================
-if (isset($_GET['edit'])) {
-
-    $id = $_GET['edit'];
-
-    if (isset($_SESSION['keranjang'][$id])) {
-
-        $item = $_SESSION['keranjang'][$id];
-
-        $_SESSION['edit_item'] = $item;
-        $_SESSION['edit_index'] = $id;
-
-        $redirect = getCategoryRoute($item['kategori']);
-
-        header('Location: ' . url($redirect));
-        exit();
-    }
-}
-
-
-// =========================
-// SIMPAN / UPDATE ITEM
-// =========================
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
-    $kategori = $_POST['kategori'] ?? '';
-
-    // =========================================
-    // KHUSUS PDH / KEMEJA
-    // =========================================
-    if ($kategori == 'PDH / Kemeja') {
-
-        $s   = (int)($_POST['qty_std_S'] ?? 0) + (int)($_POST['qty_cpt_S'] ?? 0);
-
-        $m   = (int)($_POST['qty_std_M'] ?? 0) + (int)($_POST['qty_cpt_M'] ?? 0);
-
-        $l   = (int)($_POST['qty_std_L'] ?? 0) + (int)($_POST['qty_cpt_L'] ?? 0);
-
-        $xl  = (int)($_POST['qty_std_XL'] ?? 0) + (int)($_POST['qty_cpt_XL'] ?? 0);
-
-        $xxl = (int)($_POST['qty_std_XXL'] ?? 0) + (int)($_POST['qty_cpt_XXL'] ?? 0);
-
-    } else {
-
-        // =========================================
-        // CATEGORY NORMAL
-        // =========================================
-        $s   = (int)($_POST['qty_short_S'] ?? 0) + (int)($_POST['qty_long_S'] ?? 0);
-
-        $m   = (int)($_POST['qty_short_M'] ?? 0) + (int)($_POST['qty_long_M'] ?? 0);
-
-        $l   = (int)($_POST['qty_short_L'] ?? 0) + (int)($_POST['qty_long_L'] ?? 0);
-
-        $xl  = (int)($_POST['qty_short_XL'] ?? 0) + (int)($_POST['qty_long_XL'] ?? 0);
-
-        $xxl = (int)($_POST['qty_short_XXL'] ?? 0) + (int)($_POST['qty_long_XXL'] ?? 0);
-    }
-
-
-    // =========================================
-    // TOTAL
-    // =========================================
-    $total_qty = $s + $m + $l + $xl + $xxl;
-
-    $total_harga = $total_qty * $harga_per_pcs;
-
-
-    // =========================================
-    // DATA ITEM
-    // =========================================
-    $item_baru = [
-
-        'kategori' => $_POST['kategori'] ?? '-',
-
-        'bahan'    => trim($_POST['jenis_bahan'] ?? '-'),
-
-        'warna'    => trim($_POST['warna_kain'] ?? '-'),
-
-        'sablon'   => trim($_POST['jenis_sablon'] ?? '-'),
-
-        'rincian'  => [
-
-            'S'   => $s,
-
-            'M'   => $m,
-
-            'L'   => $l,
-
-            'XL'  => $xl,
-
-            'XXL' => $xxl
-        ],
-
-        // =========================
-        // KHUSUS PDH
-        // =========================
-        'rincian_std' => [
-
-            'S'   => (int)($_POST['qty_std_S'] ?? 0),
-
-            'M'   => (int)($_POST['qty_std_M'] ?? 0),
-
-            'L'   => (int)($_POST['qty_std_L'] ?? 0),
-
-            'XL'  => (int)($_POST['qty_std_XL'] ?? 0),
-
-            'XXL' => (int)($_POST['qty_std_XXL'] ?? 0),
-        ],
-
-        'rincian_cpt' => [
-
-            'S'   => (int)($_POST['qty_cpt_S'] ?? 0),
-
-            'M'   => (int)($_POST['qty_cpt_M'] ?? 0),
-
-            'L'   => (int)($_POST['qty_cpt_L'] ?? 0),
-
-            'XL'  => (int)($_POST['qty_cpt_XL'] ?? 0),
-
-            'XXL' => (int)($_POST['qty_cpt_XXL'] ?? 0),
-        ],
-
-        'qty'   => $total_qty,
-
-        'harga' => $total_harga
-    ];
-
-
-    // =========================
-    // UPDATE ITEM
-    // =========================
-    if (isset($_POST['index_edit']) && $_POST['index_edit'] !== "") {
-
-        $idx = $_POST['index_edit'];
-        $_SESSION['keranjang'][$idx] = $item_baru;
-
-        unset($_SESSION['edit_item']);
-        unset($_SESSION['edit_index']);
-
-    } else {
-
-        // =========================
-        // TAMBAH ITEM BARU
-        // =========================
-        $_SESSION['keranjang'][] = $item_baru;
-    }
-
-    header('Location: ' . url('/transactions/cart'));
-    exit();
-}
+$validationErrors = $validationErrors ?? [];
+$oldInput = $oldInput ?? [];
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Siblings.co - Keranjang</title>
-    <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/transaction-cart.css') ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <?php include __DIR__ . '/../partials/head.php'; ?>
 </head>
 <body>
-    <div class="container">
-        <?php include __DIR__ . '/includes/sidebar.php'; ?>
-        <main class="main-content">
-            <?php include __DIR__ . '/includes/header.php'; ?>
-            
-            <div class="content-padding">
-                <h1 class="main-title">Keranjang Pesanan</h1>
-                <p class="subtitle">Berikut adalah daftar item yang akan dipesan.</p>
+<a href="#main-content" class="skip-to-content">Lewati ke konten utama</a>
+<?php include __DIR__ . '/../partials/sidebar-toggle.php'; ?>
 
-                <?php if (!empty($validationErrors)): ?>
-                    <div class="alert alert-danger" style="background:#fdecea;color:#b71c1c;border:1px solid #f5c2c7;border-radius:6px;padding:12px;margin:12px 0;">
-                        <strong>Input pesanan belum valid.</strong>
-                        <ul style="margin:8px 0 0 18px;">
-                            <?php foreach ($validationErrors as $message): ?>
-                                <li><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php endif; ?>
+<div class="app-shell">
+    <?php
+$sidebarRole = $sidebarRole ?? 'kasir';
+$activeMenu  = $activeMenu  ?? 'cart';
+include __DIR__ . '/../layouts/sidebar.php';
+?>
 
-                <?php if (!empty($oldInput)): ?>
-                    <div class="alert alert-warning" style="background:#fff8e1;color:#6d4c41;border:1px solid #ffe082;border-radius:6px;padding:12px;margin:12px 0;">
-                        Data input lama masih tersedia untuk diperbaiki. Silakan kembali ke form produk dan submit ulang setelah koreksi.
-                    </div>
-                <?php endif; ?>
+    <main class="app-main" id="main-content">
+        <div class="header-photo" aria-hidden="true"></div>
 
-                <div class="cart-card">
+        <div class="app-content">
+            <h1>Keranjang Pesanan</h1>
+            <p class="text-muted">Berikut daftar item yang akan dipesan.</p>
+
+            <?php include __DIR__ . '/includes/validation-errors.php'; ?>
+
+            <div class="cart-card">
+                <div class="data-table cart-table-wrap">
                     <table class="cart-table">
                         <thead>
                             <tr>
-                                <th>Kategori</th>
-                                <th>Detail Spesifikasi</th>
-                                <th>Rincian Size</th>
-                                <th>Total Qty</th>
-                                <th>Total Harga</th>
-                                <th>Aksi</th>
+                                <th scope="col">Kategori</th>
+                                <th scope="col">Detail Spesifikasi</th>
+                                <th scope="col">Rincian Size</th>
+                                <th scope="col">Total Qty</th>
+                                <th scope="col">Total Harga</th>
+                                <th scope="col" class="text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if(!empty($_SESSION['keranjang'])): ?>
-                                <?php foreach($_SESSION['keranjang'] as $index => $item): ?>
+                            <?php if (!empty($keranjang)): ?>
+                                <?php foreach ($keranjang as $index => $item): ?>
+                                    <tr>
+                                        <td><strong><?= e($item['kategori']) ?></strong></td>
+                                        <td>
+                                            <div class="spec-info">
+                                                <span><strong>Bahan:</strong> <?= e($item['bahan']) ?></span>
+                                                <span><strong>Sablon:</strong> <?= e($item['sablon']) ?></span>
+                                                <?php if (!empty($item['warna_summary']['short'])): ?>
+                                                    <span><strong>Pendek:</strong> <?= e($item['warna_summary']['short']) ?></span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($item['warna_summary']['long'])): ?>
+                                                    <span><strong>Panjang:</strong> <?= e($item['warna_summary']['long']) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="size-pills">
+                                                <?php foreach ($item['rincian'] as $sz => $jml): if ($jml > 0): ?>
+                                                    <span><?= e($sz) ?>: <?= e($jml) ?></span>
+                                                <?php endif; endforeach; ?>
+                                            </div>
+                                        </td>
+                                        <td><span class="total-qty tabular-nums"><?= e($item['qty']) ?>&nbsp;pcs</span></td>
+                                        <td>
+                                            <span class="price-text tabular-nums"><?= e(format_currency($item['harga'] ?? 0)) ?></span>
+                                        </td>
+                                        <td class="text-right">
+                                            <div class="action-buttons">
+                                                <a href="<?= url('/transactions/cart?edit=' . $index) ?>"
+                                                   class="btn btn--icon btn--soft" aria-label="Edit item <?= e($item['kategori']) ?>">
+                                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn--icon btn--danger-soft"
+                                                        data-cart-delete
+                                                        data-href="<?= url('/transactions/cart?hapus=' . $index) ?>"
+                                                        data-name="<?= e($item['kategori']) ?>"
+                                                        aria-label="Hapus item <?= e($item['kategori']) ?>">
+                                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <td><strong><?php echo $item['kategori']; ?></strong></td>
-                                    <td>
-                                        <div class="spec-info">
-                                            <span><strong>Bahan:</strong> <?php echo $item['bahan']; ?> (<?php echo $item['warna']; ?>)</span>
-                                            <span><strong>Sablon:</strong> <?php echo $item['sablon']; ?></span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="size-pills">
-                                            <?php foreach($item['rincian'] as $sz => $jml): if($jml > 0): ?>
-                                                <span><?php echo $sz; ?>: <?php echo $jml; ?></span>
-                                            <?php endif; endforeach; ?>
-                                        </div>
-                                    </td>
-                                    <td><span class="total-qty"><?php echo $item['qty']; ?> pcs</span></td>
-                                    <td> <span class="price-text"> Rp <?php echo number_format($item['harga'] ?? 0, 0, ',', '.'); ?>
-                                    </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <a href="<?= url('/transactions/cart?edit=' . $index) ?>" class="btn-icon edit"><i class="fas fa-edit"></i></a>
-                                            <a href="?hapus=<?php echo $index; ?>" class="btn-icon delete" onclick="return confirm('Hapus item?')"><i class="fas fa-trash"></i></a>
+                                    <td colspan="6">
+                                        <div class="empty-state empty-state--cart">
+                                            <i class="fas fa-shopping-basket empty-state__icon" aria-hidden="true"></i>
+                                            <h2 class="empty-state__title">Keranjang masih kosong</h2>
+                                            <p class="empty-state__desc">Tambahkan kategori produk untuk memulai pesanan.</p>
+                                            <a href="<?= url('/transactions/categories') ?>" class="btn btn--primary">
+                                                <i class="fas fa-plus" aria-hidden="true"></i>
+                                                Tambah Kategori
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr><td colspan="6" style="text-align:center; padding: 50px;">Keranjang kosong.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
+                </div>
+
+                <?php if (!empty($keranjang)): ?>
                     <div class="cart-summary-section">
                         <div class="summary-box">
                             <div class="summary-row">
-                                <span>Subtotal Barang:</span>
-                                <span>Rp <?php 
-                                $grand_total = 0;
-                                if(!empty($_SESSION['keranjang'])) {
-                                foreach($_SESSION['keranjang'] as $item) {
-                                    $grand_total += ($item['harga'] ?? 0);
-                                }
-                            }
-                            echo number_format($grand_total, 0, ',', '.'); 
-                        ?></span>
-                        </div>
-                        <div class="summary-row grand-total-row">
-                            <span>Grand Total:</span>
-                            <span class="final-price">Rp <?php echo number_format($grand_total, 0, ',', '.'); ?></span>
+                                <span>Subtotal Barang</span>
+                                <span class="tabular-nums"><?= e(format_currency($grandTotal)) ?></span>
+                            </div>
+                            <div class="summary-row grand-total-row">
+                                <span>Grand Total</span>
+                                <span class="final-price tabular-nums"><?= e(format_currency($grandTotal)) ?></span>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                    <div class="cart-actions-bottom">
-                        <a href="<?= url('/transactions/categories') ?>" class="btn-tambah">+ Tambah Kategori Lain</a>
-                        <a href="<?= url('/transactions/invoice') ?>" class="btn-invoice">Proses Invoice <i class="fas fa-file-invoice"></i></a>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
-        </main>
-    </div>
+
+            <?php if (!empty($keranjang)): ?>
+                <div class="cart-actions-bottom">
+                    <a href="<?= url('/transactions/categories') ?>" class="btn btn--ghost">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        Tambah Kategori Lain
+                    </a>
+                    <a href="<?= url('/transactions/invoice') ?>" class="btn btn--primary btn--lg">
+                        Proses Invoice
+                        <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+    </main>
+</div>
+
+<script src="<?= asset('js/ui.js') ?>"></script>
+<script>
+    document.addEventListener('click', async (e) => {
+        const trigger = e.target.closest('[data-cart-delete]');
+        if (!trigger) return;
+        e.preventDefault();
+
+        const ok = await window.SiblingsUI.confirm({
+            title: 'Hapus item?',
+            message: `Item ${trigger.dataset.name || ''} akan dihapus dari keranjang.`,
+            confirmText: 'Hapus',
+            cancelText: 'Batal',
+            variant: 'danger',
+        });
+        if (ok) {
+            window.location.href = trigger.dataset.href;
+        }
+    });
+</script>
 </body>
 </html>

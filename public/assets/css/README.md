@@ -4,18 +4,32 @@
 
 Folder ini menyimpan file CSS yang digunakan untuk mengatur tampilan halaman aplikasi.
 
+## Arsitektur
+
+Semua halaman menggunakan dua file dasar di setiap view:
+
+- `theme.css` — design tokens (warna, spacing, radius, typography), reset global, focus state, skip link.
+- `components.css` — komponen reusable: sidebar, header banner, button, card, badge, alert, modal, table, toast, empty state, dll.
+
+File khusus halaman hanya berisi style yang spesifik untuk halaman tersebut.
+
 ## File yang Ada
 
-- `auth.css` : style halaman login.
-- `dashboard-cashier.css` : style dashboard kasir.
-- `dashboard-owner.css` : style dashboard owner.
-- `finance.css` : style halaman keuangan.
-- `products.css` : style halaman produk.
-- `transactions.css` : style umum halaman transaksi.
-- `transaction-cart.css` : style halaman keranjang transaksi.
-- `transaction-form.css` : style form transaksi.
+- `theme.css` — base/design tokens (wajib di-load lebih dulu).
+- `components.css` — komponen UI reusable.
+- `auth.css` — halaman login.
+- `dashboard.css` — dashboard kasir & owner.
+- `transactions.css` — list pesanan, kategori, biodata customer.
+- `transaction-cart.css` — halaman keranjang.
+- `transaction-form.css` — form input pesanan (T-Shirt, Jersey, PDH, dll.).
+- `invoice.css` — halaman invoice & print style.
+- `detail-pesanan.css` — halaman detail pesanan.
+- `products.css` — manajemen stok produk.
+- `finance.css` — laporan penjualan.
 
 ## Catatan
 
-- Hubungkan CSS dari view menggunakan `asset('css/nama-file.css')`.
-- Hindari inline style besar di file view.
+- View standar memuat `theme.css` + `components.css` lewat `app/views/partials/head.php`.
+  Style spesifik halaman ditambahkan via variabel `$pageStyles` (array nama file).
+- Helper `asset()` otomatis menambahkan cache-busting (`?v=<mtime>`).
+- Hindari inline style besar di file view; pindahkan ke CSS file untuk caching.

@@ -1,690 +1,327 @@
 <?php
+$pageTitle = 'Stok Produk - Siblings.co';
+$pageStyles = ['products.css'];
+
 $stocks = $stocks ?? [];
-$stockSummary = $stockSummary ?? ['total_qty' => 0, 'low_stock_qty' => 0, 'low_stock_items' => 0];
-$stockCategories = $stockCategories ?? [];
 $sidebarRole = $sidebarRole ?? 'owner';
 $activeMenu = $activeMenu ?? 'products';
 
-$groupedStocks = [];
-foreach ($stocks as $stock) {
-    $category = $stock['nama_kategori'] ?? 'Tanpa Kategori';
-    $variant = $stock['nama_varian'] ?? 'Tanpa Varian';
-    $groupedStocks[$category][$variant][] = $stock;
+// Indeks options per variant_id: [variant_id => [size_id => [color_id => option_data]]]
+$optionMap = [];
+foreach ($options as $opt) {
+    $optionMap[$opt['variant_id']][$opt['size_id']][$opt['color_id']] = [
+        'option_id' => $opt['option_id'],
+        'qty'       => isset($opt['qty']) ? (int) $opt['qty'] : 1,
+    ];
+}
+
+// Susun kategori → varian
+$grouped = [];
+foreach ($variants as $v) {
+    $cid = $v['category_id'];
+    if (!isset($grouped[$cid])) {
+        $grouped[$cid] = ['nama' => $v['nama_kategori'], 'variants' => []];
+    }
+    $grouped[$cid]['variants'][] = $v;
+}
+
+if (!function_exists('colorNameToHex')) {
+    function colorNameToHex(string $name): string
+    {
+        return match (mb_strtolower(trim($name))) {
+            'merah'                       => '#ef4444',
+            'jingga', 'oranye', 'orange'  => '#f97316',
+            'kuning'                      => '#eab308',
+            'hijau'                       => '#22c55e',
+            'biru'                        => '#3b82f6',
+            'nila', 'indigo'              => '#6366f1',
+            'ungu', 'violet'              => '#8b5cf6',
+            'putih'                       => '#ffffff',
+            'hitam'                       => '#111827',
+            'abu', 'abu-abu', 'gray', 'grey' => '#9ca3af',
+            'pink', 'merah muda'          => '#ec4899',
+            'coklat', 'brown'             => '#92400e',
+            'maroon'                      => '#7f1d1d',
+            'tosca', 'teal'               => '#14b8a6',
+            'navy', 'biru tua'            => '#1e3a5f',
+            default                       => '#cbd5e1',
+        };
+    }
 }
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Siblings.co - Stok Produk</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="<?= asset('css/sidebar.css') ?>">
-<link rel="stylesheet" href="<?= asset('css/products.css') ?>">
+    <?php include __DIR__ . '/../partials/head.php'; ?>
 </head>
 <body>
+<a href="#main-content" class="skip-to-content">Lewati ke konten utama</a>
+<?php include __DIR__ . '/../partials/sidebar-toggle.php'; ?>
 
-<?php
-// ──────────────────────────────────────────────────────────────────────────────
-// Susun data: grouping variant → per kategori → per varian → size×warna
-// Data dari controller: $categories, $variants, $options, $sizes, $colors
-// ──────────────────────────────────────────────────────────────────────────────
-
-// Indeks options per variant_id: [variant_id => [size_id => [color_id => option_id]]]
-$optionMap = [];
-foreach ($options as $opt) {
-  $optionMap[$opt['variant_id']][$opt['size_id']][$opt['color_id']] = [
-    'option_id' => $opt['option_id'],
-    'qty'       => isset($opt['qty']) ? (int) $opt['qty'] : 1,
-  ];
-}
-
-// Susun kategori → produk → varian
-$grouped = []; // [category_id => ['nama' => ..., 'variants' => [...]]]
-foreach ($variants as $v) {
-    $cid = $v['category_id'];
-    if (!isset($grouped[$cid])) {
-        $grouped[$cid] = [
-            'nama'     => $v['nama_kategori'],
-            'variants' => [],
-        ];
-    }
-    $grouped[$cid]['variants'][] = $v;
-}
-
-// Helper: total option per varian
-function countOptions(array $optionMap, int $variantId): int {
-  if (!isset($optionMap[$variantId])) return 0;
-  $sum = 0;
-  foreach ($optionMap[$variantId] as $sizeMap) {
-    foreach ($sizeMap as $colorData) {
-      $sum += isset($colorData['qty']) ? (int) $colorData['qty'] : 1;
-    }
-  }
-  return $sum;
-}
-
-// Helper: mapping nama warna (dari DB) → kode hex CSS
-function colorNameToHex(string $name): string {
-    return match (mb_strtolower(trim($name))) {
-        'merah'          => '#ef4444',
-        'jingga', 'oranye', 'orange' => '#f97316',
-        'kuning'         => '#eab308',
-        'hijau'          => '#22c55e',
-        'biru'           => '#3b82f6',
-        'nila', 'indigo' => '#6366f1',
-        'ungu', 'violet' => '#8b5cf6',
-        'putih'          => '#ffffff',
-        'hitam'          => '#111827',
-        'abu', 'abu-abu', 'gray', 'grey' => '#9ca3af',
-        'pink', 'merah muda' => '#ec4899',
-        'coklat', 'brown'   => '#92400e',
-        'maroon'         => '#7f1d1d',
-        'tosca', 'teal'  => '#14b8a6',
-        'navy', 'biru tua' => '#1e3a5f',
-        default          => '#cbd5e1', // fallback abu muda
-    };
-}
-?>
-
-<div class="container">
-<?php
+<div class="app-shell">
+    <?php
 $sidebarRole = $sidebarRole ?? 'owner';
 $activeMenu  = $activeMenu  ?? 'products';
 include __DIR__ . '/../layouts/sidebar.php';
 ?>
 
-<!-- MAIN -->
-<div class="main-content">
-  <div class="header-photo"></div>
+    <main class="app-main" id="main-content">
+        <div class="header-photo" aria-hidden="true"></div>
 
-  <div class="content">
-    <div class="right">
-
-      <!-- HEADER -->
-      <div class="right-header">
-        <div class="header-left">
-          <h3><i class="fas fa-box"></i> Stok Barang</h3>
-          <p>Manajemen produk & varian bahan</p>
-        </div>
-
-        <div class="header-actions">
-          <!-- Filter kategori -->
-          <select id="filterKategori" onchange="filterByKategori(this.value)">
-            <option value="">Semua Kategori</option>
-            <?php foreach ($categories as $cat): ?>
-            <option value="<?= $cat['category_id'] ?>">
-              <?= htmlspecialchars($cat['nama_kategori']) ?>
-            </option>
-            <?php endforeach; ?>
-          </select>
-
-          <button class="btn" onclick="openModalTambah()">
-            <i class="fas fa-plus"></i> Tambah
-          </button>
-          <button class="btn" id="btnHapusMode" onclick="toggleDeleteMode()">
-            <i class="fas fa-trash"></i> Hapus
-          </button>
-        </div>
-      </div>
-
-      <!-- WRAPPER PRODUK -->
-      <div class="product-wrapper" id="productWrapper">
-
-        <?php if (empty($grouped)): ?>
-          <div style="text-align:center;padding:40px;color:#94a3b8;">
-            <i class="fas fa-box-open" style="font-size:40px;margin-bottom:10px;"></i>
-            <p>Belum ada data produk</p>
-          </div>
-        <?php endif; ?>
-
-        <?php foreach ($grouped as $cid => $cat): ?>
-        <?php
-          // Hitung total option di seluruh varian kategori ini
-          $totalCat = 0;
-          foreach ($cat['variants'] as $v) {
-              $totalCat += countOptions($optionMap, $v['variant_id']);
-          }
-        ?>
-        <div class="kategori-item" data-category-id="<?= $cid ?>">
-          <div class="kategori-header" onclick="toggleKategori(this)">
-            <div class="left">
-              <input type="checkbox" class="pilih-hapus" style="display:none;"
-                     data-category-id="<?= $cid ?>"
-                     onclick="event.stopPropagation()">
-              <div class="icon"><i class="fas fa-tshirt"></i></div>
-              <span class="nama"><?= htmlspecialchars($cat['nama']) ?></span>
-            </div>
-            <div class="right">
-              <span class="total"><?= $totalCat ?> opsi</span>
-              <span class="arrow"><i class="fas fa-chevron-down"></i></span>
-            </div>
-          </div>
-
-          <div class="kategori-content">
-            <?php foreach ($cat['variants'] as $v): ?>
-            <?php
-              $vid = $v['variant_id'];
-              $sizeGroups = $optionMap[$vid] ?? [];
-              $totalVariant = countOptions($optionMap, $vid);
-            ?>
-            <div class="kain" data-variant-id="<?= $vid ?>">
-              <!-- Header varian / bahan -->
-              <div class="kain-title" onclick="toggleKain(this)" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-                <span><?= htmlspecialchars($v['nama_varian']) ?>
-                  <small style="color:#94a3b8;font-size:12px;margin-left:8px;">(<?= $totalVariant ?> pcs)</small>
-                </span>
-                <div style="display:flex;gap:6px;" onclick="event.stopPropagation()">
-                  <button class="btn" style="padding:4px 10px;font-size:12px;"
-                          onclick="openModalEdit(<?= htmlspecialchars(json_encode($v)) ?>, <?= htmlspecialchars(json_encode($optionMap[$vid] ?? [])) ?>)">
-                    <i class="fas fa-pen"></i>
-                  </button>
-                  <button class="btn btn-cancel" style="padding:4px 10px;font-size:12px;"
-                          onclick="hapusVarian(<?= $vid ?>)">
-                    <i class="fas fa-trash"></i>
-                  </button>
+        <div class="app-content">
+            <div class="product-page__header">
+                <div>
+                    <h3><i class="fas fa-box" aria-hidden="true"></i> Stok Barang</h3>
+                    <p>Kelola produk dan varian bahan dari sini.</p>
                 </div>
-              </div>
 
-              <!-- Info harga -->
-              <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">
-                Mulai Rp <?= number_format($v['harga_start_from'], 0, ',', '.') ?> &nbsp;|&nbsp;
-                Bahan: <?= htmlspecialchars($v['bahan'] ?? '-') ?>
-              </div>
+                <div class="product-page__actions">
+                    <label class="sr-only" for="filterKategori">Filter kategori</label>
+                    <select id="filterKategori">
+                        <option value="">Semua Kategori</option>
+                        <?php foreach ($categories as $cat): ?>
+                            <option value="<?= e($cat['category_id']) ?>"><?= e($cat['nama_kategori']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
 
-              <?php if (empty($sizeGroups)): ?>
-              <div style="font-size:13px;color:#cbd5e1;padding:8px 0;">
-                Belum ada ukuran & warna
-              </div>
-              <?php else: ?>
-
-              <?php foreach ($sizeGroups as $sid => $colorMap): ?>
-              <?php
-                $sizeName  = '';
-                foreach ($sizes as $sz) {
-                    if ($sz['size_id'] == $sid) { $sizeName = $sz['size_name']; break; }
-                }
-                $totalColors = count($colorMap);
-                $totalSizePcs = 0;
-                foreach ($colorMap as $cdata) { $totalSizePcs += isset($cdata['qty']) ? (int)$cdata['qty'] : 1; }
-              ?>
-              <div class="ukuran-item" data-size-id="<?= $sid ?>">
-                <div class="ukuran-row" onclick="toggleUkuran(this)" style="cursor:pointer;">
-                  <span><?= htmlspecialchars($sizeName) ?></span>
-                  <span><?= $totalColors ?> warna &bull; <?= $totalSizePcs ?> pcs</span>
-                  <div class="aksi">
-                    <button class="btn-delete" title="Hapus semua warna ukuran ini"
-                            onclick="event.stopPropagation(); hapusSemuaWarnaUkuran(<?= $vid ?>, <?= $sid ?>)">
-                      <i class="fas fa-trash"></i>
+                    <button type="button" class="btn btn--soft" id="btnTambah">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        Tambah
                     </button>
-                  </div>
+                    <button type="button" class="btn btn--soft" id="btnHapusMode">
+                        <i class="fas fa-trash" aria-hidden="true"></i>
+                        Hapus
+                    </button>
                 </div>
+            </div>
 
-                <div class="warna-list" style="display:none;">
-                  <?php foreach ($colorMap as $cid2 => $optData): ?>
-                  <?php
-                    $colorName = '';
-                    foreach ($colors as $cl) {
-                        if ($cl['color_id'] == $cid2) { $colorName = $cl['color_name']; break; }
-                    }
-                    $dotHex    = colorNameToHex($colorName);
-                    $dotBorder = (mb_strtolower(trim($colorName)) === 'putih')
-                                 ? 'border:1px solid #d1d5db;' : '';
-                    $optId = is_array($optData) ? $optData['option_id'] : $optData;
-                    $qty   = is_array($optData) ? (int)($optData['qty'] ?? 1) : 1;
-                  ?>
-                  <div class="warna-row" data-option-id="<?= $optId ?>">
-                    <span style="--dot-color:<?= $dotHex ?>; --dot-border:<?= $dotBorder ?>;">
-                      <?= htmlspecialchars($colorName) ?>
-                    </span>
-                    <span style="color:#94a3b8;font-size:13px;"><?= $qty ?> pcs</span>
-                    <div class="aksi">
-                      <button class="btn-delete" title="Hapus warna ini"
-                              onclick="hapusOption(<?= $optId ?>, this)">
-                        <i class="fas fa-trash"></i>
-                      </button>
+            <div class="product-wrapper scroll-thin" id="productWrapper">
+                <?php if (empty($grouped)): ?>
+                    <div class="empty-state empty-state--bare">
+                        <i class="fas fa-box-open empty-state__icon" aria-hidden="true"></i>
+                        <h2 class="empty-state__title">Belum ada produk</h2>
+                        <p class="empty-state__desc">Tambahkan varian baru untuk mulai mengelola stok.</p>
+                        <button type="button" class="btn btn--primary" id="btnTambahEmpty">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                            Tambah Varian
+                        </button>
                     </div>
-                  </div>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-              <?php endforeach; ?>
-              <?php endif; ?>
+                <?php endif; ?>
 
-            </div><!-- .kain -->
-            <?php endforeach; ?>
-          </div><!-- .kategori-content -->
-        </div><!-- .kategori-item -->
-        <?php endforeach; ?>
+                <?php foreach ($grouped as $cid => $cat): ?>
+                    <?php
+                    $totalCat = 0;
+                    foreach ($cat['variants'] as $v) {
+                        $totalCat += countOptions($optionMap, $v['variant_id']);
+                    }
+                    ?>
+                    <div class="kategori-item" data-category-id="<?= e($cid) ?>">
+                        <button type="button"
+                                class="kategori-header"
+                                data-toggle="kategori"
+                                aria-expanded="false"
+                                aria-controls="kategori-content-<?= e($cid) ?>">
+                            <span class="left">
+                                <input type="checkbox" class="pilih-hapus" hidden
+                                       data-category-id="<?= e($cid) ?>"
+                                       aria-label="Pilih kategori untuk dihapus">
+                                <span class="icon" aria-hidden="true"><i class="fas fa-tshirt"></i></span>
+                                <span class="nama"><?= e($cat['nama']) ?></span>
+                            </span>
+                            <span class="right">
+                                <span class="total"><?= $totalCat ?> opsi</span>
+                                <span class="arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                            </span>
+                        </button>
 
-      </div><!-- .product-wrapper -->
-    </div><!-- .right -->
-  </div><!-- .content -->
-</div><!-- .main-content -->
-</div><!-- .container -->
+                        <div class="kategori-content" id="kategori-content-<?= e($cid) ?>">
+                            <?php foreach ($cat['variants'] as $v): ?>
+                                <?php
+                                $vid = $v['variant_id'];
+                                $sizeGroups = $optionMap[$vid] ?? [];
+                                $totalVariant = countOptions($optionMap, $vid);
+                                ?>
+                                <div class="kain" data-variant-id="<?= e($vid) ?>">
+                                    <div class="kain-title">
+                                        <button type="button"
+                                                class="kain-title__btn"
+                                                data-toggle="kain"
+                                                aria-expanded="false"
+                                                aria-controls="kain-options-<?= e($vid) ?>">
+                                            <span class="kain-title__caret" aria-hidden="true"></span>
+                                            <span class="kain-title__label">
+                                                <?= e($v['nama_varian']) ?>
+                                                <small class="text-muted kain-title__count">(<?= $totalVariant ?>&nbsp;pcs)</small>
+                                            </span>
+                                        </button>
+                                        <div class="aksi">
+                                            <button type="button" class="btn btn--soft btn--sm"
+                                                    data-action="edit-variant"
+                                                    data-variant='<?= e(json_encode($v)) ?>'
+                                                    data-options='<?= e(json_encode($optionMap[$vid] ?? [])) ?>'
+                                                    aria-label="Edit varian <?= e($v['nama_varian']) ?>">
+                                                <i class="fas fa-pen" aria-hidden="true"></i>
+                                            </button>
+                                            <button type="button" class="btn btn--icon btn--danger-soft"
+                                                    data-action="delete-variant"
+                                                    data-variant-id="<?= e($vid) ?>"
+                                                    data-variant-name="<?= e($v['nama_varian']) ?>"
+                                                    aria-label="Hapus varian <?= e($v['nama_varian']) ?>">
+                                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
 
+                                    <div class="kain__meta">
+                                        Mulai <?= e(format_currency($v['harga_start_from'])) ?>
+                                        &middot; Bahan: <?= e($v['bahan'] ?? '-') ?>
+                                    </div>
 
-<!-- ══════════════════════════════════════════════════════════════
-     MODAL TAMBAH VARIAN
-══════════════════════════════════════════════════════════════ -->
-<div class="modal" id="modalTambah">
-  <div class="modal-content" style="max-width:420px;">
-    <h3><i class="fas fa-plus-circle" style="color:#4A3328;margin-right:8px;"></i>Tambah Varian</h3>
+                                    <div class="kain__options" id="kain-options-<?= e($vid) ?>" hidden>
+                                        <?php if (empty($sizeGroups)): ?>
+                                            <p class="text-muted kain__empty">Belum ada ukuran &amp; warna.</p>
+                                        <?php else: ?>
+                                            <?php foreach ($sizeGroups as $sid => $colorMap): ?>
+                                                <?php
+                                                $sizeName  = '';
+                                                foreach ($sizes as $sz) {
+                                                    if ($sz['size_id'] == $sid) { $sizeName = $sz['size_name']; break; }
+                                                }
+                                                $totalColors = count($colorMap);
+                                                $totalSizePcs = 0;
+                                                foreach ($colorMap as $cdata) {
+                                                    $totalSizePcs += isset($cdata['qty']) ? (int) $cdata['qty'] : 1;
+                                                }
+                                                ?>
+                                                <div class="ukuran-item" data-size-id="<?= e($sid) ?>">
+                                                    <div class="ukuran-row">
+                                                        <button type="button"
+                                                                class="ukuran-row__toggle"
+                                                                data-toggle="ukuran"
+                                                                aria-expanded="false"
+                                                                aria-controls="warna-list-<?= e($vid) ?>-<?= e($sid) ?>">
+                                                            <span class="ukuran-row__size"><?= e($sizeName) ?></span>
+                                                            <span class="ukuran-row__count"><?= $totalColors ?>&nbsp;warna &bull; <?= $totalSizePcs ?>&nbsp;pcs</span>
+                                                        </button>
+                                                        <button type="button" class="btn-delete"
+                                                                data-action="delete-size"
+                                                                data-variant-id="<?= e($vid) ?>"
+                                                                data-size-id="<?= e($sid) ?>"
+                                                                aria-label="Hapus semua warna ukuran <?= e($sizeName) ?>">
+                                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                                        </button>
+                                                    </div>
 
-    <div class="input-group">
-      <label>Kategori</label>
-      <select id="t_category_id" style="padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;outline:none;">
-        <?php foreach ($categories as $cat): ?>
-        <option value="<?= $cat['category_id'] ?>"><?= htmlspecialchars($cat['nama_kategori']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-
-    <div class="input-group">
-      <label>Nama Produk</label>
-      <input type="text" id="t_nama_produk" placeholder="Contoh: Tshirt Basic">
-    </div>
-
-    <div class="input-group">
-      <label>Nama Varian / Bahan</label>
-      <input type="text" id="t_nama_varian" placeholder="Contoh: Cotton Combed 24s">
-    </div>
-
-    <div class="input-group">
-      <label>Bahan</label>
-      <input type="text" id="t_bahan" placeholder="Contoh: Cotton Combed 24s">
-    </div>
-
-    <div class="input-group">
-      <label>Tipe Sablon / Bordir</label>
-      <input type="text" id="t_tipe_sablon" placeholder="Contoh: Plastisol / DTF">
-    </div>
-
-    <div class="input-group">
-      <label>Harga Mulai Dari (Rp)</label>
-      <input type="number" id="t_harga" placeholder="Contoh: 62000" min="0">
-    </div>
-
-    <!-- Pilih ukuran & warna -->
-    <div class="input-group">
-      <label>Ukuran & Warna <small style="color:#94a3b8;">(boleh pilih lebih dari satu kombinasi)</small></label>
-      <div id="t_options_list" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
-      <button type="button" onclick="tambahBarisPilihan('t_options_list')"
-              style="margin-top:8px;padding:6px 12px;border:1px dashed #4A3328;border-radius:8px;background:transparent;color:#4A3328;cursor:pointer;font-size:13px;">
-        <i class="fas fa-plus"></i> Tambah Kombinasi
-      </button>
-    </div>
-
-    <div class="modal-action">
-      <button class="btn btn-cancel" onclick="closeModal('modalTambah')">Batal</button>
-      <button class="btn" onclick="submitTambah()">Simpan</button>
-    </div>
-  </div>
+                                                    <div class="warna-list" id="warna-list-<?= e($vid) ?>-<?= e($sid) ?>" hidden>
+                                                        <?php foreach ($colorMap as $cid2 => $optData):
+                                                            $colorName = '';
+                                                            foreach ($colors as $cl) {
+                                                                if ($cl['color_id'] == $cid2) { $colorName = $cl['color_name']; break; }
+                                                            }
+                                                            $dotHex    = colorNameToHex($colorName);
+                                                            $dotBorder = (mb_strtolower(trim($colorName)) === 'putih') ? '1px solid #d1d5db' : 'none';
+                                                            $optId = is_array($optData) ? $optData['option_id'] : $optData;
+                                                            $qty   = is_array($optData) ? (int) ($optData['qty'] ?? 1) : 1;
+                                                        ?>
+                                                            <div class="warna-row" data-option-id="<?= e($optId) ?>">
+                                                                <span class="warna-row__name" style="--dot-color:<?= e($dotHex) ?>; --dot-border:<?= e($dotBorder) ?>;">
+                                                                    <?= e($colorName) ?>
+                                                                </span>
+                                                                <span class="warna-row__qty"><?= $qty ?>&nbsp;pcs</span>
+                                                                <button type="button" class="btn-delete"
+                                                                        data-action="delete-option"
+                                                                        data-option-id="<?= e($optId) ?>"
+                                                                        aria-label="Hapus warna <?= e($colorName) ?>">
+                                                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                                                </button>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </main>
 </div>
+
+<!-- Modal Tambah / Edit -->
+<div class="modal-overlay" id="modalForm" role="dialog" aria-modal="true" aria-labelledby="modalFormTitle" aria-hidden="true">
+    <div class="modal">
+        <div class="modal__header">
+            <h3 class="modal__title" id="modalFormTitle">Tambah Varian</h3>
+            <button type="button" class="modal__close" data-modal-close aria-label="Tutup dialog">&times;</button>
+        </div>
+        <div class="modal__body">
+            <input type="hidden" id="f_variant_id" value="">
+
+            <div class="form-field" id="f_category_field">
+                <label class="form-field__label" for="f_category_id">Kategori</label>
+                <select id="f_category_id" class="form-control">
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?= e($cat['category_id']) ?>"><?= e($cat['nama_kategori']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="form-field" id="f_nama_produk_field">
+                <label class="form-field__label" for="f_nama_produk">Nama Produk</label>
+                <input id="f_nama_produk" class="form-control" type="text" placeholder="Contoh: Tshirt Basic">
+            </div>
+
+            <div class="form-field">
+                <label class="form-field__label" for="f_nama_varian">Nama Varian / Bahan</label>
+                <input id="f_nama_varian" class="form-control" type="text" placeholder="Contoh: Cotton Combed 24s">
+            </div>
+
+            <div class="form-field">
+                <label class="form-field__label" for="f_bahan">Bahan</label>
+                <input id="f_bahan" class="form-control" type="text">
+            </div>
+
+            <div class="form-field">
+                <label class="form-field__label" for="f_tipe_sablon">Tipe Sablon / Bordir</label>
+                <input id="f_tipe_sablon" class="form-control" type="text" placeholder="Contoh: Plastisol / DTF">
+            </div>
+
+            <div class="form-field">
+                <label class="form-field__label" for="f_harga">Harga Mulai Dari (Rp)</label>
+                <input id="f_harga" class="form-control" type="number" min="0" placeholder="62000">
+            </div>
+
+            <div class="form-field">
+                <label class="form-field__label">Ukuran &amp; Warna</label>
+                <div id="f_options_list" class="f-options-list"></div>
+                <button type="button" class="btn btn--ghost btn--sm mt-4" id="btnAddCombination">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    Tambah Kombinasi
+                </button>
+            </div>
+        </div>
+        <div class="modal__footer">
+            <button type="button" class="btn btn--ghost" data-modal-close>Batal</button>
+            <button type="button" class="btn btn--primary" id="btnSubmitForm">Simpan</button>
+        </div>
+    </div>
 </div>
-</div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════════════
-     MODAL EDIT VARIAN
-══════════════════════════════════════════════════════════════ -->
-<div class="modal" id="modalEdit">
-  <div class="modal-content" style="max-width:420px;">
-    <h3><i class="fas fa-pen" style="color:#4A3328;margin-right:8px;"></i>Edit Varian</h3>
-    <input type="hidden" id="e_variant_id">
-
-    <div class="input-group">
-      <label>Nama Varian / Bahan</label>
-      <input type="text" id="e_nama_varian">
-    </div>
-
-    <div class="input-group">
-      <label>Bahan</label>
-      <input type="text" id="e_bahan">
-    </div>
-
-    <div class="input-group">
-      <label>Tipe Sablon / Bordir</label>
-      <input type="text" id="e_tipe_sablon">
-    </div>
-
-    <div class="input-group">
-      <label>Harga Mulai Dari (Rp)</label>
-      <input type="number" id="e_harga" min="0">
-    </div>
-
-    <!-- Pilih ukuran & warna -->
-    <div class="input-group">
-      <label>Ukuran & Warna</label>
-      <div id="e_options_list" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
-      <button type="button" onclick="tambahBarisPilihan('e_options_list')"
-              style="margin-top:8px;padding:6px 12px;border:1px dashed #4A3328;border-radius:8px;background:transparent;color:#4A3328;cursor:pointer;font-size:13px;">
-        <i class="fas fa-plus"></i> Tambah Kombinasi
-      </button>
-    </div>
-
-    <div class="modal-action">
-      <button class="btn btn-cancel" onclick="closeModal('modalEdit')">Batal</button>
-      <button class="btn" onclick="submitEdit()">Simpan Perubahan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════
-     DATA UKURAN & WARNA (untuk JS dropdown)
-══════════════════════════════════════════════════════════════ -->
 <script>
 const SIZES  = <?= json_encode(array_values($sizes)) ?>;
 const COLORS = <?= json_encode(array_values($colors)) ?>;
 const ENDPOINTS = {
-  store: '<?= url('/products/store') ?>',
-  update: '<?= url('/products/update') ?>',
-  destroy: '<?= url('/products/destroy') ?>',
-  destroyOption: '<?= url('/products/destroy-option') ?>',
+    store: '<?= url('/products/store') ?>',
+    update: '<?= url('/products/update') ?>',
+    destroy: '<?= url('/products/destroy') ?>',
+    destroyOption: '<?= url('/products/destroy-option') ?>',
 };
-
-// ── TOGGLE ACCORDION ──────────────────────────────────────────
-function toggleKategori(header) {
-    const item = header.closest('.kategori-item');
-    item.classList.toggle('active');
-}
-
-function toggleKain(title) {
-    const kain    = title.closest('.kain');
-    const content = kain.querySelectorAll('.ukuran-item');
-    const isOpen  = kain.classList.contains('active');
-    kain.classList.toggle('active');
-    content.forEach(el => el.style.display = isOpen ? 'none' : 'block');
-}
-
-function toggleUkuran(row) {
-    const item   = row.closest('.ukuran-item');
-    const list   = item.querySelector('.warna-list');
-    if (!list) return;
-    list.style.display = list.style.display === 'none' ? 'flex' : 'none';
-}
-
-// ── FILTER KATEGORI ───────────────────────────────────────────
-function filterByKategori(cid) {
-    document.querySelectorAll('.kategori-item').forEach(el => {
-        el.style.display = (!cid || el.dataset.categoryId == cid) ? '' : 'none';
-    });
-}
-
-// ── MODAL ─────────────────────────────────────────────────────
-function openModalTambah() {
-    document.getElementById('t_nama_produk').value = '';
-    document.getElementById('t_nama_varian').value = '';
-    document.getElementById('t_bahan').value       = '';
-    document.getElementById('t_tipe_sablon').value = '';
-    document.getElementById('t_harga').value       = '';
-    document.getElementById('t_options_list').innerHTML = '';
-    tambahBarisPilihan('t_options_list');
-    showModal('modalTambah');
-}
-
-function openModalEdit(varian, optionMap) {
-    document.getElementById('e_variant_id').value   = varian.variant_id;
-    document.getElementById('e_nama_varian').value  = varian.nama_varian;
-    document.getElementById('e_bahan').value        = varian.bahan ?? '';
-    document.getElementById('e_tipe_sablon').value  = varian.tipe_sablon_bordir ?? '';
-    document.getElementById('e_harga').value        = varian.harga_start_from;
-
-    const list = document.getElementById('e_options_list');
-    list.innerHTML = '';
-
-    // Isi baris pilihan dari optionMap {size_id: {color_id: {option_id, qty}}}
-    let hasPilihan = false;
-    for (const [sizeId, colorMap] of Object.entries(optionMap)) {
-      for (const [colorId, optData] of Object.entries(colorMap)) {
-        const qty = (optData && optData.qty) ? parseInt(optData.qty) : 1;
-        tambahBarisPilihan('e_options_list', parseInt(sizeId), parseInt(colorId), qty);
-        hasPilihan = true;
-      }
-    }
-    if (!hasPilihan) tambahBarisPilihan('e_options_list');
-    showModal('modalEdit');
-}
-
-function showModal(id) {
-    const m = document.getElementById(id);
-    m.style.display = 'flex';
-}
-function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-}
-
-// Tutup modal saat klik backdrop
-window.addEventListener('click', e => {
-    ['modalTambah', 'modalEdit'].forEach(id => {
-        if (e.target.id === id) closeModal(id);
-    });
-});
-
-// ── BARIS PILIHAN UKURAN × WARNA ─────────────────────────────
-function tambahBarisPilihan(containerId, selectedSize = null, selectedColor = null, selectedQty = 1) {
-  const container = document.getElementById(containerId);
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:6px;align-items:center;';
-
-  const sizeSelect = document.createElement('select');
-  sizeSelect.style.cssText = 'flex:1;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;';
-  SIZES.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.size_id;
-    opt.textContent = s.size_name;
-    if (selectedSize && s.size_id == selectedSize) opt.selected = true;
-    sizeSelect.appendChild(opt);
-  });
-
-  const colorSelect = document.createElement('select');
-  colorSelect.style.cssText = 'flex:1;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;';
-  COLORS.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.color_id;
-    opt.textContent = c.color_name;
-    if (selectedColor && c.color_id == selectedColor) opt.selected = true;
-    colorSelect.appendChild(opt);
-  });
-
-  const qtyInput = document.createElement('input');
-  qtyInput.type = 'number';
-  qtyInput.min = 1;
-  qtyInput.value = selectedQty || 1;
-  qtyInput.style.cssText = 'width:80px;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;';
-
-  const btnHapus = document.createElement('button');
-  btnHapus.type = 'button';
-  btnHapus.innerHTML = '<i class="fas fa-times"></i>';
-  btnHapus.style.cssText = 'padding:6px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:8px;cursor:pointer;';
-  btnHapus.onclick = () => row.remove();
-
-  row.appendChild(sizeSelect);
-  row.appendChild(colorSelect);
-  row.appendChild(qtyInput);
-  row.appendChild(btnHapus);
-  container.appendChild(row);
-}
-
-function collectOptions(containerId) {
-    const rows = document.getElementById(containerId).querySelectorAll('div');
-    const opts = [];
-    rows.forEach(row => {
-        const selects = row.querySelectorAll('select');
-    if (selects.length >= 2) {
-      const qtyInput = row.querySelector('input[type="number"]');
-      const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
-      opts.push({ size_id: parseInt(selects[0].value), color_id: parseInt(selects[1].value), qty });
-    }
-    });
-    return opts;
-}
-
-// ── SUBMIT TAMBAH ─────────────────────────────────────────────
-async function submitTambah() {
-    const payload = {
-        category_id : parseInt(document.getElementById('t_category_id').value),
-        nama_produk : document.getElementById('t_nama_produk').value.trim(),
-        nama_varian : document.getElementById('t_nama_varian').value.trim(),
-        bahan       : document.getElementById('t_bahan').value.trim(),
-        tipe_sablon : document.getElementById('t_tipe_sablon').value.trim(),
-        harga       : parseFloat(document.getElementById('t_harga').value) || 0,
-        options     : collectOptions('t_options_list'),
-    };
-
-    if (!payload.nama_produk || !payload.nama_varian) {
-        alert('Nama produk dan nama varian wajib diisi!'); return;
-    }
-
-    const res  = await fetch(ENDPOINTS.store, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-
-    if (json.success) {
-        closeModal('modalTambah');
-        location.reload();
-    } else {
-        alert('Gagal menyimpan: ' + json.message);
-    }
-}
-
-// ── SUBMIT EDIT ───────────────────────────────────────────────
-async function submitEdit() {
-    const payload = {
-        variant_id  : parseInt(document.getElementById('e_variant_id').value),
-        nama_varian : document.getElementById('e_nama_varian').value.trim(),
-        bahan       : document.getElementById('e_bahan').value.trim(),
-        tipe_sablon : document.getElementById('e_tipe_sablon').value.trim(),
-        harga       : parseFloat(document.getElementById('e_harga').value) || 0,
-        options     : collectOptions('e_options_list'),
-    };
-
-    const res  = await fetch(ENDPOINTS.update, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-
-    if (json.success) {
-        closeModal('modalEdit');
-        location.reload();
-    } else {
-        alert('Gagal menyimpan: ' + json.message);
-    }
-}
-
-// ── HAPUS VARIAN (soft delete) ────────────────────────────────
-async function hapusVarian(variantId) {
-    if (!confirm('Yakin ingin menonaktifkan varian ini?')) return;
-
-    const res  = await fetch(ENDPOINTS.destroy, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ variant_id: variantId }),
-    });
-    const json = await res.json();
-
-    if (json.success) {
-        location.reload();
-    } else {
-        alert('Gagal menghapus: ' + json.message);
-    }
-}
-
-// ── HAPUS SATU WARNA (option_id) ─────────────────────────────
-async function hapusOption(optionId, btn) {
-    if (!confirm('Hapus warna ini?')) return;
-
-    const res  = await fetch(ENDPOINTS.destroyOption, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ option_id: optionId }),
-    });
-    const json = await res.json();
-
-    if (json.success) {
-        btn.closest('.warna-row').remove();
-    } else {
-        alert('Gagal menghapus: ' + json.message);
-    }
-}
-
-// ── HAPUS SEMUA WARNA DALAM SATU UKURAN ──────────────────────
-async function hapusSemuaWarnaUkuran(variantId, sizeId) {
-    if (!confirm('Hapus semua warna pada ukuran ini?')) return;
-
-    // Kumpulkan semua option_id di ukuran ini
-    // Kita fetch dari DOM (sudah ada data-option-id)
-    const item    = event.target.closest('.ukuran-item') ||
-                    document.querySelector(`[data-variant-id="${variantId}"] [data-size-id="${sizeId}"]`);
-    const rows    = item ? item.querySelectorAll('.warna-row') : [];
-    const optIds  = [...rows].map(r => parseInt(r.dataset.optionId)).filter(Boolean);
-
-    for (const oid of optIds) {
-        await fetch(ENDPOINTS.destroyOption, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ option_id: oid }),
-        });
-    }
-    location.reload();
-}
-
-// ── MODE HAPUS KATEGORI (checkbox) ───────────────────────────
-let deleteMode = false;
-function toggleDeleteMode() {
-    deleteMode = !deleteMode;
-    const btn  = document.getElementById('btnHapusMode');
-
-    document.querySelectorAll('.pilih-hapus').forEach(cb => {
-        cb.style.display = deleteMode ? 'inline-block' : 'none';
-        cb.checked = false;
-    });
-
-    if (deleteMode) {
-        btn.style.background = '#fee2e2';
-        btn.style.color = '#dc2626';
-        if (!document.getElementById('hapusTerpilih')) {
-            const b = document.createElement('button');
-            b.id = 'hapusTerpilih';
-            b.className = 'btn';
-            b.style.background = '#dc2626';
-            b.style.color = '#fff';
-            b.innerHTML = '<i class="fas fa-trash"></i> Hapus Terpilih';
-            b.onclick = hapusTerpilih;
-            document.querySelector('.header-actions').appendChild(b);
-        }
-    } else {
-        btn.style.background = '';
-        btn.style.color = '';
-        document.getElementById('hapusTerpilih')?.remove();
-    }
-}
-
-async function hapusTerpilih() {
-    const checked = [...document.querySelectorAll('.pilih-hapus:checked')];
-    if (!checked.length) { alert('Pilih kategori terlebih dahulu!'); return; }
-    if (!confirm(`Nonaktifkan ${checked.length} varian dalam kategori terpilih?`)) return;
-
-    // Kumpulkan semua variant_id dalam kategori yang di-check
-    for (const cb of checked) {
-        const kategoriEl = cb.closest('.kategori-item');
-        const variantEls = kategoriEl.querySelectorAll('[data-variant-id]');
-        for (const el of variantEls) {
-            await fetch(ENDPOINTS.destroy, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ variant_id: parseInt(el.dataset.variantId) }),
-            });
-        }
-    }
-    location.reload();
-}
 </script>
-
+<script src="<?= asset('js/ui.js') ?>"></script>
+<script src="<?= asset('js/products.js') ?>"></script>
 </body>
 </html>

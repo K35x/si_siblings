@@ -1,316 +1,137 @@
+<?php
+$pageTitle = 'Dashboard Owner - Siblings.co';
+$pageStyles = ['dashboard.css'];
+
+$stats = $stats ?? [
+    ['label' => 'Pesanan Baru',         'value' => 12],
+    ['label' => 'Sedang Diproses',      'value' => 4],
+    ['label' => 'Siap Diambil',         'value' => 8],
+    ['label' => 'Total Omzet Hari Ini', 'value' => 'Rp 1.540.000'],
+];
+
+$deadlines = $deadlines ?? [
+    ['order' => '#102 - Ahmad', 'label' => 'Hari ini',     'badge' => 'badge--danger'],
+    ['order' => '#103 - Andi',  'label' => 'Besok',        'badge' => 'badge--warning'],
+    ['order' => '#104 - Nisa',  'label' => '2 hari lagi',  'badge' => 'badge--neutral'],
+    ['order' => '#105 - Alin',  'label' => '2 hari lagi',  'badge' => 'badge--neutral'],
+    ['order' => '#106 - Anto',  'label' => '3 hari lagi',  'badge' => 'badge--neutral'],
+];
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Siblings.co - Dashboard Owner</title>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="<?= asset('css/dashboard-owner.css') ?>">
+    <?php include __DIR__ . '/../partials/head.php'; ?>
 </head>
-
 <body>
+<a href="#main-content" class="skip-to-content">Lewati ke konten utama</a>
+<?php include __DIR__ . '/../partials/sidebar-toggle.php'; ?>
 
-<div class="container">
-  <?php
+<div class="app-shell">
+    <?php
     $sidebarRole = 'owner';
     $activeMenu = 'dashboard';
     include __DIR__ . '/sidebar.php';
-  ?>
+    ?>
 
-  <!-- MAIN CONTENT -->
-  <div class="main-content">
+    <main class="app-main" id="main-content">
+        <div class="header-photo" aria-hidden="true"></div>
 
-    <!-- HEADER -->
-    <div class="header-photo"></div>
+        <div class="app-content app-content--fit dashboard-owner-page">
+            <h1 class="dashboard-owner-page__title">Dashboard Owner</h1>
 
-    <!-- CONTENT -->
-    <div class="content-padding">
+            <section class="dashboard-stats" aria-label="Statistik harian">
+                <?php foreach ($stats as $stat): ?>
+                    <div class="dashboard-stat">
+                        <span class="dashboard-stat__value"><?= e($stat['value']) ?></span>
+                        <span class="dashboard-stat__label"><?= e($stat['label']) ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </section>
 
-      <!-- CARD STATISTIK -->
-      <div class="dashboard-cards">
-        <div class="card-custom">
-          <h2 id="pesananBaru">12</h2>
-          <p>Pesanan Baru</p>
+            <section class="dashboard-grid dashboard-grid--owner">
+                <!-- DEADLINE PRODUKSI -->
+                <div class="panel">
+                    <div class="panel__header">
+                        <h3 class="panel__title">
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            Deadline Produksi
+                        </h3>
+                    </div>
+                    <div class="panel__body scroll-thin">
+                        <ul class="activity-list">
+                            <?php foreach ($deadlines as $item): ?>
+                                <li class="deadline-item">
+                                    <span class="deadline-item__icon" aria-hidden="true">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </span>
+                                    <div class="deadline-item__info">
+                                        <h4><?= e($item['order']) ?></h4>
+                                        <p>Deadline: <?= e($item['label']) ?></p>
+                                    </div>
+                                    <span class="badge <?= e($item['badge']) ?>">
+                                        <i class="far fa-clock" aria-hidden="true"></i>
+                                        <?= e($item['label']) ?>
+                                    </span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- STATISTIK PENJUALAN -->
+                <div class="panel chart-panel">
+                    <div class="panel__header">
+                        <h3 class="panel__title">Statistik Penjualan</h3>
+                    </div>
+                    <div class="panel__body">
+                        <canvas id="chart" aria-label="Grafik penjualan per kategori produk" role="img"></canvas>
+                    </div>
+                </div>
+            </section>
         </div>
-
-        <div class="card-custom">
-          <h2 id="diproses">4</h2>
-          <p>Sedang Diproses</p>
-        </div>
-
-        <div class="card-custom">
-          <h2 id="siap">8</h2>
-          <p>Siap Diambil</p>
-        </div>
-
-        <div class="card-custom">
-          <h2 id="omzet">1.540.000</h2>
-          <p>Total Omzet Hari Ini</p>
-        </div>
-      </div>
-
-      <!-- BAGIAN BAWAH -->
-      <div class="dashboard-bottom">
-
-<!-- DEADLINE PRODUKSI -->
-<div class="box deadline-card">
-  <div class="deadline-header">
-    <div class="deadline-icon">
-      <i class="fas fa-calendar-alt"></i>
-    </div>
-    <h6>Deadline Produksi</h6>
-  </div>
-
-  <div class="deadline-list">
-
-    <!-- Item 1 -->
-    <div class="deadline-item">
-      <div class="deadline-item-icon">
-        <i class="fas fa-calendar-check"></i>
-      </div>
-
-      <div class="deadline-info">
-        <h4>#102 - Ahmad</h4>
-        <p>Deadline: Hari ini</p>
-      </div>
-
-      <span class="deadline-badge">
-        <i class="far fa-clock"></i>
-        Hari ini
-      </span>
-    </div>
-
-    <!-- Item 2 -->
-    <div class="deadline-item">
-      <div class="deadline-item-icon">
-        <i class="fas fa-calendar-day"></i>
-      </div>
-
-      <div class="deadline-info">
-        <h4>#103 - Andi</h4>
-        <p>Deadline: Besok</p>
-      </div>
-
-      <span class="deadline-badge">
-        <i class="far fa-clock"></i>
-        Besok
-      </span>
-    </div>
-
-    <!-- Item 3 -->
-    <div class="deadline-item">
-      <div class="deadline-item-icon">
-        <i class="fas fa-calendar"></i>
-      </div>
-
-      <div class="deadline-info">
-        <h4>#104 - Nisa</h4>
-        <p>Deadline: 2 hari lagi</p>
-      </div>
-
-      <span class="deadline-badge">
-        <i class="far fa-clock"></i>
-        2 hari lagi
-      </span>
-    </div>
-
-    <!-- Item 4 -->
-    <div class="deadline-item">
-      <div class="deadline-item-icon">
-        <i class="fas fa-calendar"></i>
-      </div>
-
-      <div class="deadline-info">
-        <h4>#105 - Alin</h4>
-        <p>Deadline: 2 hari lagi</p>
-      </div>
-
-      <span class="deadline-badge">
-        <i class="far fa-clock"></i>
-        2 hari lagi
-      </span>
-    </div>
-
-     <div class="deadline-item">
-      <div class="deadline-item-icon">
-        <i class="fas fa-calendar"></i>
-      </div>
-
-      <div class="deadline-info">
-        <h4>#106 - A</h4>
-        <p>Deadline: 2 hari lagi</p>
-      </div>
-
-      <span class="deadline-badge">
-        <i class="far fa-clock"></i>
-        2 hari lagi
-      </span>
-    </div>
-
-  </div>
+    </main>
 </div>
 
-        <!-- AKTIVITAS TERAKHIR -->
-        <div class="box activity-card">
-
-          <div class="activity-header">
-            <h3>Aktivitas Terakhir</h3>
-            <button class="btn-view-all" onclick="openActivityModal()">
-              Lihat Semua
-            </button>
-          </div>
-
-          <div class="activity-list">
-            <div class="activity-item">
-              <span class="activity-time">10.17</span>
-              <span class="activity-text">Menambahkan pesanan</span>
-            </div>
-
-            <div class="activity-item">
-              <span class="activity-time">10.50</span>
-              <span class="activity-text">Menerima pembayaran dari Ahmad</span>
-            </div>
-
-            <div class="activity-item">
-              <span class="activity-time">11.07</span>
-              <span class="activity-text">Menambahkan pesanan</span>
-            </div>
-
-            <div class="activity-item">
-              <span class="activity-time">11.26</span>
-              <span class="activity-text">Menerima pembayaran dari SMA 2</span>
-            </div>
-
-            <div class="activity-item">
-              <span class="activity-time">12.09</span>
-              <span class="activity-text">Pesanan baru masuk</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- STATISTIK PENJUALAN -->
-        <div class="box chart-box">
-          <h6 class="chart-title">Statistik Penjualan</h6>
-          <div class="box-content">
-            <canvas id="chart"></canvas>
-          </div>
-        </div>
-
-      </div>
-      <!-- END dashboard-bottom -->
-
-    </div>
-    <!-- END content-padding -->
-
-  </div>
-  <!-- END main-content -->
-
-</div>
-<!-- END container -->
-
-<!-- MODAL AKTIVITAS -->
-<div class="modal-overlay" id="activityModal">
-  <div class="activity-modal">
-
-    <div class="modal-header">
-      <h3>Aktivitas Terakhir (Semua)</h3>
-      <button class="modal-close" onclick="closeActivityModal()">
-        &times;
-      </button>
-    </div>
-
-    <div class="modal-body">
-      <table class="activity-table">
-        <thead>
-          <tr>
-            <th>Waktu</th>
-            <th>Aktivitas</th>
-            <th>Oleh</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>10.17</td>
-            <td>Menambahkan pesanan</td>
-            <td>Kasir</td>
-          </tr>
-          <tr>
-            <td>10.50</td>
-            <td>Menerima pembayaran dari Ahmad</td>
-            <td>Kasir</td>
-          </tr>
-          <tr>
-            <td>11.07</td>
-            <td>Menambahkan pesanan</td>
-            <td>Kasir</td>
-          </tr>
-          <tr>
-            <td>11.26</td>
-            <td>Menerima pembayaran dari SMA 2</td>
-            <td>Kasir</td>
-          </tr>
-          <tr>
-            <td>12.09</td>
-            <td>Pesanan baru masuk</td>
-            <td>Kasir</td>
-          </tr>
-          <tr>
-            <td>13.20</td>
-            <td>Status pesanan diperbarui</td>
-            <td>Owner</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-close" onclick="closeActivityModal()">
-        Tutup
-      </button>
-    </div>
-
-  </div>
-</div>
-
-<!-- CHART.JS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- JAVASCRIPT -->
+<script src="<?= asset('js/vendor/chart.umd.min.js') ?>"></script>
+<script src="<?= asset('js/ui.js') ?>"></script>
 <script>
-  // Grafik Penjualan
-  new Chart(document.getElementById('chart'), {
-    type: 'bar',
-    data: {
-      labels: ['Jersey', 'PDH', 'Kaos', 'Kemeja'],
-      datasets: [{
-        label: 'Penjualan',
-        data: [8, 12, 16, 20]
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  });
+    (function () {
+        const ctx = document.getElementById('chart');
+        if (!ctx || typeof Chart === 'undefined') return;
 
-  // Modal Aktivitas
-  function openActivityModal() {
-    document.getElementById('activityModal').classList.add('show');
-  }
+        const styles = getComputedStyle(document.documentElement);
+        const brand = styles.getPropertyValue('--color-brand-700').trim() || '#4a3328';
+        const grid = styles.getPropertyValue('--color-divider').trim()
+            || styles.getPropertyValue('--color-border-soft').trim()
+            || '#f1e6db';
 
-  function closeActivityModal() {
-    document.getElementById('activityModal').classList.remove('show');
-  }
-
-  window.addEventListener('click', function(e) {
-    const modal = document.getElementById('activityModal');
-    if (e.target === modal) {
-      closeActivityModal();
-    }
-  });
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jersey', 'PDH', 'Kaos', 'Kemeja'],
+                datasets: [{
+                    label: 'Penjualan (pcs)',
+                    data: [8, 12, 16, 20],
+                    backgroundColor: brand,
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                    ? false
+                    : { duration: 350 },
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: grid }, ticks: { precision: 0 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    })();
 </script>
-
 </body>
 </html>

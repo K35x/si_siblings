@@ -20,6 +20,34 @@ ORDER BY o.order_id DESC
     }
 
     // =========================
+    // FIND ORDER (detail)
+    // =========================
+    public function findOrder(string $orderCode): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT o.*, c.nama, c.no_hp
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.customer_id
+            WHERE o.order_code = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$orderCode]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    public function findOrderItems(int $orderId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM order_items
+            WHERE order_id = ?
+        ");
+        $stmt->execute([$orderId]);
+        return $stmt->fetchAll();
+    }
+
+    // =========================
     // PRODUK AKTIF
     // =========================
     public function allProducts(): array

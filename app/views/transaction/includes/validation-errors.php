@@ -4,18 +4,26 @@ $oldInput = $oldInput ?? [];
 ?>
 
 <?php if (!empty($validationErrors)): ?>
-    <div class="alert alert-danger" style="background:#fdecea;color:#b71c1c;border:1px solid #f5c2c7;border-radius:6px;padding:12px;margin:12px 0;">
+    <div class="alert alert--danger" role="alert" aria-live="assertive" tabindex="-1" data-validation-banner>
         <strong>Input pesanan belum valid.</strong>
-        <ul style="margin:8px 0 0 18px;">
+        <ul>
             <?php foreach ($validationErrors as $message): ?>
-                <li><?= htmlspecialchars((string) $message, ENT_QUOTES, 'UTF-8') ?></li>
+                <li><?= e((string) $message) ?></li>
             <?php endforeach; ?>
         </ul>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const banner = document.querySelector('[data-validation-banner]');
+            if (banner && typeof banner.focus === 'function') {
+                banner.focus();
+            }
+        });
+    </script>
 <?php endif; ?>
 
 <?php if (!empty($oldInput)): ?>
-    <div class="alert alert-warning" style="background:#fff8e1;color:#6d4c41;border:1px solid #ffe082;border-radius:6px;padding:12px;margin:12px 0;">
+    <div class="alert alert--warning" role="status" aria-live="polite">
         Data yang sudah Anda isi dipertahankan. Perbaiki field yang ditandai lalu submit ulang.
     </div>
     <script>

@@ -1,12 +1,15 @@
 <?php
+$pageTitle = 'Laporan Penjualan - Siblings.co';
+$pageStyles = ['transactions.css', 'finance.css'];
+
 $paymentStates = $paymentStates ?? [];
 $financialErrors = $financialErrors ?? [];
 $financialNotice = $financialNotice ?? null;
 $oldInput = $oldInput ?? [];
+
 $totalSales = 0.0;
 $totalQty = 0;
 $totalTransactions = 0;
-
 foreach ($paymentStates as $row) {
     $totalSales += (float) ($row['grand_total'] ?? 0);
     $totalQty += (int) ($row['total_qty'] ?? 0);
@@ -14,54 +17,50 @@ foreach ($paymentStates as $row) {
 }
 
 $statusLabels = [
-    'unpaid' => 'Belum Bayar',
-    'partial' => 'Sebagian',
-    'paid' => 'Lunas',
+    'unpaid'   => 'Belum Bayar',
+    'partial'  => 'Sebagian',
+    'paid'     => 'Lunas',
     'overpaid' => 'Lebih Bayar',
 ];
 $statusClasses = [
-    'unpaid' => 'status-pending',
-    'partial' => 'status-partial',
-    'paid' => 'status-selesai',
+    'unpaid'   => 'status-pending',
+    'partial'  => 'status-partial',
+    'paid'     => 'status-selesai',
     'overpaid' => 'status-overpaid',
 ];
 $statusIcons = [
-    'unpaid' => 'fas fa-clock',
-    'partial' => 'fas fa-hourglass-half',
-    'paid' => 'fas fa-check',
+    'unpaid'   => 'fas fa-clock',
+    'partial'  => 'fas fa-hourglass-half',
+    'paid'     => 'fas fa-check',
     'overpaid' => 'fas fa-exclamation-triangle',
 ];
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Laporan Penjualan - Siblings.co</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= asset('css/finance.css') ?>">
-    <style>
-        .payment-status-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:700; font-size:.85rem; }
-        .status-partial { color:#9a5b00; background:#fff4d6; }
-        .status-overpaid { color:#8a1c1c; background:#ffe0e0; }
-        .status-pending { color:#6d4c41; background:#fff8e1; }
-        .status-selesai { color:#1b5e20; background:#e8f5e9; }
-        .amount-muted { color:#777; font-size:.85rem; margin-top:4px; }
-        .amount-danger { color:#b71c1c; font-weight:700; }
-    </style>
+    <?php include __DIR__ . '/../partials/head.php'; ?>
 </head>
 <body>
-<div class="container">
-    <?php include __DIR__ . '/sidebar.php'; ?>
-    <main class="main-content">
-        <?php include __DIR__ . '/header.php'; ?>
-        <div class="content-padding">
-            <h1 class="finance-title">Laporan Penjualan</h1>
+<a href="#main-content" class="skip-to-content">Lewati ke konten utama</a>
+<?php include __DIR__ . '/../partials/sidebar-toggle.php'; ?>
+
+<div class="app-shell">
+    <?php
+    $sidebarRole = 'owner';
+    $activeMenu = 'finance';
+    include __DIR__ . '/../layouts/sidebar.php';
+    ?>
+
+    <main class="app-main" id="main-content">
+        <div class="header-photo header-photo--finance" aria-hidden="true"></div>
+
+        <div class="app-content">
+            <h1>Laporan Penjualan</h1>
 
             <?php if (!empty($financialErrors)): ?>
-                <div class="alert alert-danger" style="background:#fdecea;color:#b71c1c;border:1px solid #f5c2c7;border-radius:6px;padding:12px;margin:12px 0;">
+                <div class="alert alert--danger" role="alert">
                     <strong>Aksi keuangan gagal.</strong>
-                    <ul style="margin:8px 0 0 18px;">
+                    <ul>
                         <?php foreach ($financialErrors as $message): ?>
                             <li><?= e($message) ?></li>
                         <?php endforeach; ?>
@@ -70,60 +69,72 @@ $statusIcons = [
             <?php endif; ?>
 
             <?php if (!empty($financialNotice)): ?>
-                <div class="alert alert-success" style="background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;border-radius:6px;padding:12px;margin:12px 0;">
+                <div class="alert alert--success" role="status">
                     <?= e($financialNotice) ?>
                 </div>
             <?php endif; ?>
 
-            <?php if (!empty($oldInput) && !empty($financialErrors)): ?>
-                <div class="alert alert-warning" style="background:#fff8e1;color:#6d4c41;border:1px solid #ffe082;border-radius:6px;padding:12px;margin:12px 0;">
-                    Data input lama masih tersedia untuk diperbaiki.
+            <section class="finance-stats" aria-label="Ringkasan penjualan">
+                <div class="stat-card">
+                    <span class="stat-card__icon"><i class="fas fa-shopping-cart" aria-hidden="true"></i></span>
+                    <div>
+                        <p class="stat-card__label">Total Penjualan</p>
+                        <h3 class="stat-card__value tabular-nums"><?= e(format_currency($totalSales)) ?></h3>
+                    </div>
                 </div>
-            <?php endif; ?>
+                <div class="stat-card stat-card--highlight">
+                    <span class="stat-card__icon"><i class="fas fa-box" aria-hidden="true"></i></span>
+                    <div>
+                        <p class="stat-card__label">Total Produk Terjual</p>
+                        <h3 class="stat-card__value tabular-nums"><?= (int) $totalQty ?>&nbsp;pcs</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-card__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
+                    <div>
+                        <p class="stat-card__label">Jumlah Transaksi</p>
+                        <h3 class="stat-card__value tabular-nums"><?= (int) $totalTransactions ?>&nbsp;Pesanan</h3>
+                    </div>
+                </div>
+            </section>
 
-            <div class="stats-grid sales-stats-grid">
-                <div class="stat-card sales-stat-card">
-                    <i class="fas fa-shopping-cart"></i>
-                    <div class="stat-info">
-                        <p>Total Penjualan</p>
-                        <h3><?= e(format_currency($totalSales)) ?></h3>
-                    </div>
-                </div>
-                <div class="stat-card sales-stat-card highlight">
-                    <i class="fas fa-box"></i>
-                    <div class="stat-info">
-                        <p>Total Produk Terjual</p>
-                        <h3><?= (int) $totalQty ?> pcs</h3>
-                    </div>
-                </div>
-                <div class="stat-card sales-stat-card">
-                    <i class="fas fa-receipt"></i>
-                    <div class="stat-info">
-                        <p>Jumlah Transaksi</p>
-                        <h3><?= (int) $totalTransactions ?> Pesanan</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="filter-section">
-                <label><i class="fas fa-filter"></i> Filter:</label>
-                <select>
-                    <option>Semua Bulan</option>
-                    <option>Januari 2026</option>
-                    <option>Februari 2026</option>
-                    <option>Maret 2026</option>
+            <form class="filter-section" method="get" action="<?= url('/finance') ?>">
+                <label for="financeMonth"><i class="fas fa-filter" aria-hidden="true"></i> Filter:</label>
+                <select id="financeMonth" name="month">
+                    <option value="">Semua Bulan</option>
+                    <option value="01">Januari</option>
+                    <option value="02">Februari</option>
+                    <option value="03">Maret</option>
+                    <option value="04">April</option>
+                    <option value="05">Mei</option>
+                    <option value="06">Juni</option>
+                    <option value="07">Juli</option>
+                    <option value="08">Agustus</option>
+                    <option value="09">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
                 </select>
-                <input type="date" value="2026-01-01">
-                <input type="date" value="2026-12-31">
-                <button class="btn-filter">Terapkan</button>
-            </div>
+
+                <label class="sr-only" for="financeFrom">Dari tanggal</label>
+                <input id="financeFrom" type="date" name="from">
+
+                <label class="sr-only" for="financeTo">Sampai tanggal</label>
+                <input id="financeTo" type="date" name="to">
+
+                <button type="submit" class="btn btn--primary">Terapkan</button>
+            </form>
 
             <div class="finance-toolbar">
                 <h2>Detail Transaksi Penjualan</h2>
                 <div class="finance-tools">
                     <div class="finance-search">
-                        <input type="text" placeholder="Cari pesanan...">
-                        <i class="fas fa-search"></i>
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <label class="sr-only" for="financeSearch">Cari pesanan</label>
+                        <input id="financeSearch" type="search"
+                               placeholder="Cari pesanan…"
+                               autocomplete="off"
+                               spellcheck="false">
                     </div>
                 </div>
             </div>
@@ -132,48 +143,52 @@ $statusIcons = [
                 <table>
                     <thead>
                         <tr>
-                            <th>No</th>
-                            <th>Tanggal</th>
-                            <th>Nomor Pesanan</th>
-                            <th>Customer</th>
-                            <th>Jumlah</th>
-                            <th>Total Penjualan</th>
-                            <th>Total Dibayar</th>
-                            <th>Sisa / Lebih Bayar</th>
-                            <th>Status Pembayaran</th>
+                            <th scope="col">No</th>
+                            <th scope="col">Tanggal</th>
+                            <th scope="col">Nomor Pesanan</th>
+                            <th scope="col">Customer</th>
+                            <th scope="col">Jumlah</th>
+                            <th scope="col">Total Penjualan</th>
+                            <th scope="col">Total Dibayar</th>
+                            <th scope="col">Sisa / Lebih Bayar</th>
+                            <th scope="col">Status Pembayaran</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="financeBody">
                         <?php if (!empty($paymentStates)): ?>
-                            <?php foreach ($paymentStates as $index => $row): ?>
-                                <?php
+                            <?php foreach ($paymentStates as $index => $row):
                                 $state = (string) ($row['payment_state'] ?? 'unpaid');
                                 $remaining = (float) ($row['remaining_balance'] ?? 0);
                                 $balanceText = $state === 'overpaid'
                                     ? 'Lebih ' . format_currency(abs($remaining))
                                     : format_currency(max(0, $remaining));
-                                ?>
-                                <tr>
-                                    <td><?= $index + 1 ?></td>
+                            ?>
+                                <tr data-search="<?= e(strtolower(($row['order_code'] ?? '') . ' ' . ($row['customer_name'] ?? ''))) ?>">
+                                    <td class="tabular-nums"><?= $index + 1 ?></td>
                                     <td><span class="date-pill"><?= e(format_date_id($row['tanggal_order'] ?? null)) ?></span></td>
-                                    <td><?= e($row['order_code']) ?></td>
+                                    <td translate="no"><?= e($row['order_code']) ?></td>
                                     <td><?= e($row['customer_name']) ?></td>
-                                    <td><?= (int) ($row['total_qty'] ?? 0) ?> pcs</td>
-                                    <td><?= e(format_currency($row['grand_total'])) ?></td>
-                                    <td><?= e(format_currency($row['total_paid'])) ?></td>
-                                    <td class="<?= $state === 'overpaid' ? 'amount-danger' : '' ?>"><?= e($balanceText) ?></td>
+                                    <td class="tabular-nums"><?= (int) ($row['total_qty'] ?? 0) ?>&nbsp;pcs</td>
+                                    <td class="tabular-nums"><?= e(format_currency($row['grand_total'])) ?></td>
+                                    <td class="tabular-nums"><?= e(format_currency($row['total_paid'])) ?></td>
+                                    <td class="tabular-nums <?= $state === 'overpaid' ? 'amount-danger' : '' ?>"><?= e($balanceText) ?></td>
                                     <td>
                                         <span class="payment-status-pill <?= e($statusClasses[$state] ?? 'status-pending') ?>">
+                                            <i class="<?= e($statusIcons[$state] ?? 'fas fa-clock') ?>" aria-hidden="true"></i>
                                             <?= e($statusLabels[$state] ?? ucfirst($state)) ?>
-                                            <i class="<?= e($statusIcons[$state] ?? 'fas fa-clock') ?>"></i>
                                         </span>
-                                        <div class="amount-muted">status: <?= e($state) ?></div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" style="text-align:center; padding: 50px;">Belum ada data transaksi.</td>
+                                <td colspan="9">
+                                    <div class="empty-state empty-state--inline">
+                                        <i class="fas fa-chart-line empty-state__icon" aria-hidden="true"></i>
+                                        <h2 class="empty-state__title">Belum ada data transaksi</h2>
+                                        <p class="empty-state__desc">Transaksi yang sudah selesai akan muncul di sini.</p>
+                                    </div>
+                                </td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -182,5 +197,21 @@ $statusIcons = [
         </div>
     </main>
 </div>
+
+<script src="<?= asset('js/ui.js') ?>"></script>
+<script>
+    (function () {
+        const search = document.getElementById('financeSearch');
+        const tbody = document.getElementById('financeBody');
+        if (!search || !tbody) return;
+
+        search.addEventListener('input', (e) => {
+            const q = (e.target.value || '').toLowerCase().trim();
+            tbody.querySelectorAll('tr[data-search]').forEach((row) => {
+                row.style.display = !q || row.dataset.search.includes(q) ? '' : 'none';
+            });
+        });
+    })();
+</script>
 </body>
 </html>

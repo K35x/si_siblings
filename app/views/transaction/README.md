@@ -11,8 +11,9 @@ Folder ini berisi tampilan untuk alur transaksi kasir, mulai dari daftar pesanan
 - `select-category.php` : halaman pemilihan kategori produk.
 - `cart.php` : halaman keranjang transaksi.
 - `invoice.php` : halaman invoice transaksi.
+- `detail-pesanan.php` : halaman detail pesanan.
 - `form/` : kumpulan form input berdasarkan jenis produk.
-- `includes/` : komponen kecil khusus halaman transaksi seperti header dan sidebar wrapper.
+- `includes/` : partial khusus halaman form transaksi (layout wrapper, validasi, dll).
 
 ## Catatan
 
