@@ -1,161 +1,80 @@
-<!DOCTYPE html> 
+<?php
+$pageTitle = 'Pilih Kategori Pesanan - Siblings.co';
+$pageStyles = ['transactions.css'];
+
+
+
+
+$formKeyMap = [];
+foreach ($categories as $cat) {
+    $formKeyMap[strtolower($cat['category_name'])] = strtolower(str_replace(' ', '-', $cat['category_name']));
+}
+
+$customerName  = $_SESSION['customer_name'] ?? '';
+$customerPhone = $_SESSION['customer_phone'] ?? '';
+$namaProject   = $_SESSION['project_name'] ?? '';
+$tglPemesanan  = $_SESSION['order_date'] ?? '';
+$hasBiodata    = $customerName !== '';
+
+$iconMap = [
+    't-shirt'         => 'fa-shirt',
+    'jersey'          => 'fa-vest',
+    'polo shirt'      => 'fa-vest',
+    'seragam olahraga'=> 'fa-dumbbell',
+    'jacket'          => 'fa-vest-patches',
+    'hoodie'          => 'fa-hat-cowboy',
+    'pdh'             => 'fa-user-tie',
+];
+$defaultIcon = 'fa-shirt';
+?>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siblings.co - Pilih Kategori</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>">
-    <style>
-        /* Styling khusus untuk menu kategori agar seimbang */
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-
-        .category-card {
-            background: white;
-            border: 2px solid #E6D5B8;
-            border-radius: 20px;
-            padding: 30px 20px;
-            text-align: center;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .category-card:hover {
-            border-color: #4A3328;
-            transform: translateY(-10px);
-            box-shadow: 0 10px 20px rgba(74, 51, 40, 0.1);
-        }
-
-        .category-icon {
-            width: 80px;
-            height: 80px;
-            background-color: #F8F3E9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: #4A3328;
-            transition: 0.3s;
-        }
-
-        .category-card:hover .category-icon {
-            background-color: #4A3328;
-            color: white;
-        }
-
-        .category-card h3 {
-            color: #4A3328;
-            font-size: 20px;
-            font-weight: 800;
-        }
-
-        .category-card p {
-            color: #A39382;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #4A3328;
-            text-decoration: none;
-            font-weight: bold;
-            margin-bottom: 20px;
-            transition: 0.3s;
-        }
-
-        .btn-back:hover {
-            color: #79B473;
-        }
-    </style>
+    <?php include __DIR__ . '/../partials/head.php'; ?>
 </head>
 <body>
-    <div class="container">
-        <!-- Panggil Sidebar yang sama -->
-        <?php include __DIR__ . '/includes/sidebar.php'; ?>
+<a href="#main-content" class="skip-to-content">Lewati ke konten utama</a>
+<?php include __DIR__ . '/../partials/sidebar-toggle.php'; ?>
 
-        <main class="main-content">
-            <!-- Panggil Header yang sama -->
-            <?php include __DIR__ . '/includes/header.php'; ?>
+<div class="app-shell">
+    <?php
+$sidebarRole = $sidebarRole ?? Model::ROLE_KASIR;
+$activeMenu  = $activeMenu  ?? 'orders';
+include __DIR__ . '/../layouts/sidebar.php';
+?>
 
-            <div class="content-padding">
-                <a href="<?= url('/transactions') ?>" class="btn-back">
-                    <i class="fas fa-arrow-left"></i> Kembali ke List Pesanan
-                </a>
-                
-                <h1>Pilih Kategori Pesanan</h1>
-                <p style="color: #4A3328; margin-bottom: 30px;">Silahkan pilih jenis pakaian untuk melanjutkan ke form input detail.</p>
+    <main class="app-main" id="main-content">
+        <div class="header-photo" aria-hidden="true"></div>
 
-                <div class="category-grid">
-    <!-- Kategori T-Shirt -->
-    <a href="<?= url('/transactions/form/tshirt') ?>" class="category-card">
-        <div class="category-icon">
-            <i class="fas fa-tshirt"></i>
-        </div>
-        <h3>T-Shirt / Kaos</h3>
-        <p>Pesanan kaos oblong, raglan, lengan panjang, atau sablon custom.</p>
-    </a>
+        <div class="app-content">
+            <a href="<?= url('/transactions') ?>" class="btn-back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Kembali
+            </a>
+            <h1>Pilih Kategori</h1>
+            <p class="text-muted">Pilih jenis produk yang ingin dipesan oleh pelanggan.</p>
 
-    <!-- Kategori PDH -->
-    <a href="<?= url('/transactions/form/pdh') ?>" class="category-card">
-        <div class="category-icon">
-            <i class="fas fa-user-tie"></i>
-        </div>
-        <h3>PDH / Kemeja</h3>
-        <p>Seragam organisasi, kemeja kerja, PDL, atau kemeja formal bordir.</p>
-    </a>
-
-    <!-- Kategori Jersey -->
-    <a href="<?= url('/transactions/form/jersey') ?>" class="category-card">
-        <div class="category-icon">
-            <i class="fas fa-running"></i>
-        </div>
-        <h3>Jersey</h3>
-        <p>Pakaian olahraga, futsal, basket, atau badminton dengan bahan dry-fit.</p>
-    </a>
-
-    <!-- Kategori Polo -->
-    <a href="<?= url('/transactions/form/poloshirt') ?>" class="category-card">
-        <div class="category-icon">
-            <i class="fas fa-vest"></i>
-        </div>
-        <h3>Polo Shirt</h3>
-        <p>Kaos berkerah dengan bahan lacoste atau pique untuk kesan semi-formal.</p>
-    </a>
-
-    <!-- Kategori Seragam Olahraga (NEW) -->
-    <a href="<?= url('/transactions/form/seragamolahraga') ?>" class="category-card">
-        <div class="category-icon">
-            <i class="fas fa-swimmer"></i>
-        </div>
-        <h3>Seragam Olahraga</h3>
-        <p>Setelan baju dan celana olahraga untuk sekolah, instansi, atau komunitas.</p>
-    </a>
-
-    <!-- Kategori Jacket & Hoodie (NEW) -->
-    <a href="<?= url('/transactions/form/jackethoodie') ?>" class="category-card">
-        <div class="category-icon">
-            <i class="fas fa-user-ninja"></i>
-        </div>
-        <h3>Jacket & Hoodie</h3>
-        <p>Jaket bomber, coach jacket, jumper, atau zipper hoodie dengan bahan hangat.</p>
-    </a>
-</div>
-                </div>
+            <div class="category-grid">
+                <?php foreach ($categories as $cat):
+                    $catLower = strtolower($cat['category_name']);
+                    $formKey = $formKeyMap[$catLower] ?? str_replace(' ', '-', $catLower);
+                    $icon = $iconMap[$catLower] ?? $defaultIcon;
+                ?>
+                    <a href="<?= url('/transactions/form/' . $formKey) ?>"
+                       class="category-card">
+                        <div class="category-card__icon">
+                            <i class="fas <?= $icon ?>"></i>
+                        </div>
+                        <div class="category-card__info">
+                            <h3 class="category-card__name"><?= e($cat['category_name']) ?></h3>
+                        </div>
+                        <i class="fas fa-chevron-right category-card__arrow" aria-hidden="true"></i>
+                    </a>
+                <?php endforeach; ?>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
+</div>
+
+<script src="<?= asset('js/ui.js') ?>"></script>
 </body>
 </html>

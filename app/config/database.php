@@ -2,11 +2,11 @@
 
 return [
     "driver" => "mysql",
-    "host" => "localhost",
+    "host" => "127.0.0.1",
     "port" => 3306,
-    "database" => "si_siblings",
-    "username" => "root",
-    "password" => "",
+    "database" => "mifmyho2_D3",
+    "username" => "mifmyho2_D3",
+    "password" => "@MIF2025",
     "charset" => "utf8mb4",
     "options" => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

@@ -1,69 +1,105 @@
+<?php
+$pageTitle = 'Login - Siblings.co';
+$pageStyles = ['auth.css'];
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Siblings.co</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= asset('css/auth.css') ?>">
+    <?php include __DIR__ . '/../partials/head.php'; ?>
 </head>
 <body>
+    <a href="#login-form" class="skip-to-content">Lewati ke form login</a>
 
-    <div class="container-fluid p-0 h-100">
-        <div class="row g-0 main-wrapper">
-    
-            <div class="col-md-6 brand-section h-100">
-                <img src="<?= asset('img/logo.png') ?>" alt="Siblings.co Logo">
-            </div>
-
-            <div class="col-md-6 login-section h-100">
-                <div class="login-card">
-                    <h1>Login</h1>
-                    <?php if (!empty($error)): ?>
-                        <div class="alert alert-danger" role="alert">
-                            <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <form method="post" action="<?= url('/login') ?>">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text"><i class="fas fa-user"></i></span>
-                            <input type="text" name="username" class="form-control" placeholder="username" value="<?= htmlspecialchars($username ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
-                        </div>
-
-                        <div class="mb-1">
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" name="password" class="form-control" id="password" placeholder="password" required>
-                                <span class="input-group-text password-toggle">
-                                    <i class="fas fa-eye toggle-password"></i>
-                                </span>
-                            </div>
-                            <a href="#" class="forgot-password">forgot password?</a>
-                        </div>
-
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-login shadow-sm">Login</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
+    <div class="auth-wrapper">
+        <div class="auth-brand" aria-hidden="true">
+            <img src="<?= asset('img/logo.png') ?>" alt="Logo Siblings.co">
         </div>
+
+        <section class="auth-form-section" aria-labelledby="auth-title">
+            <div class="auth-card">
+                <h1 class="auth-card__title" id="auth-title">Login</h1>
+
+                <?php if (!empty($error)): ?>
+                    <div class="auth-error" role="alert">
+                        <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                        <?= e($error) ?>
+                    </div>
+                <?php endif; ?>
+
+                <form id="login-form" class="auth-form" method="post" action="<?= url('/login') ?>" novalidate>
+                    <?= csrf_field() ?>
+                    <div class="form-field">
+                        <label for="username" class="form-field__label">Username</label>
+                        <div class="auth-input-group">
+                            <span class="auth-input-group__icon" aria-hidden="true">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                class="form-control"
+                                placeholder="Masukkan username"
+                                value="<?= e($username ?? '') ?>"
+                                autocomplete="username"
+                                spellcheck="false"
+                                autocapitalize="off"
+                                required
+                                aria-required="true">
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="password" class="form-field__label">Password</label>
+                        <div class="auth-input-group">
+                            <span class="auth-input-group__icon" aria-hidden="true">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="form-control"
+                                placeholder="Masukkan password"
+                                autocomplete="current-password"
+                                spellcheck="false"
+                                required
+                                aria-required="true">
+                            <button
+                                type="button"
+                                class="auth-input-group__toggle"
+                                id="togglePassword"
+                                aria-label="Tampilkan password"
+                                aria-pressed="false"
+                                aria-controls="password">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-actions">
+                        <button type="submit" class="btn auth-submit" data-loading-label="Masuk…">Masuk</button>
+                    </div>
+                </form>
+            </div>
+        </section>
     </div>
 
     <script>
-       
-        const togglePassword = document.querySelector('.toggle-password');
-        const passwordInput = document.querySelector('#password');
+        (function () {
+            const toggle = document.getElementById('togglePassword');
+            const input = document.getElementById('password');
+            const icon = toggle.querySelector('i');
 
-        togglePassword.addEventListener('click', function () {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye-slash');
-        });
+            toggle.addEventListener('click', function () {
+                const isVisible = input.getAttribute('type') === 'text';
+                input.setAttribute('type', isVisible ? 'password' : 'text');
+                toggle.setAttribute('aria-pressed', String(!isVisible));
+                toggle.setAttribute('aria-label', isVisible ? 'Tampilkan password' : 'Sembunyikan password');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+        })();
     </script>
 </body>
 </html>

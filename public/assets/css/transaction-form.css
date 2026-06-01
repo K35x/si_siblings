@@ -1,263 +1,416 @@
+/* ============================================================
+   Transaction product form (T-Shirt, Jersey, PDH, dll.)
+   ============================================================ */
 
-:root {
-    --primary-brown: #4A3328;
-    --secondary-beige: #F8F3E9;
-    --accent-green: #79B473;
-    --border-color: #E6D5B8;
-    --text-muted: #A39382;
-}
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .status-values {
-            display: flex;
-            gap: 10px;
-            min-width: 80px;
-            justify-content: flex-end;
-        }
-        /* Style tambahan untuk memisahkan lengan pendek/panjang & input warna inline */
-        .section-label-lengan {
-            background: #4A3328;
-            color: #fff;
-            font-size: 0.8em;
-            font-weight: bold;
-            padding: 5px 10px;
-            letter-spacing: 0.5px;
-            border-radius: 3px;
-        }
-        
-        .size-table input.warna-input-inline {
-            width: 100% !important; /* Paksa memanjang penuh */
-            padding: 8px !important; /* Tebal padding box */
-            border: 1px solid #ddd !important;
-            border-radius: 4px !important;
-            font-size: 0.85em !important;
-            box-sizing: border-box !important; /* Supaya input tidak meluber keluar garis */
-            text-align: left !important;
-        }
-        
-        .size-table th, .size-table td {
-            padding: 8px 6px;
-            vertical-align: middle;
-        }
-
-/* 1. Layout Dasar & Judul */
-.main-title { 
-    font-size: 28px; 
-    color: var(--primary-brown); 
-    font-weight: 800; 
-    margin-bottom: 5px; 
-}
-.btn-back-link {
-    text-decoration: none; 
-    color: var(--primary-brown);
-    font-size: 14px; 
-    font-weight: 600; 
+.form-back-link {
     display: inline-flex;
-    align-items: center; 
-    gap: 8px; 
-    margin-bottom: 20px;
+    align-items: center;
+    gap: var(--space-1);
+    text-decoration: none;
+    color: var(--color-brand-700);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    margin-bottom: var(--space-3);
+    transition: color var(--transition-fast), transform var(--transition-fast);
 }
 
-/* 2. Grid System */
-.form-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr;
-    gap: 25px; 
+.form-back-link:hover {
+    color: var(--color-accent);
+    transform: translateX(-2px);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-3);
     align-items: stretch;
 }
 
-/* 3. Card Styling */
 .form-card {
-    background: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid rgba(74, 51, 40, 0.1);
-    overflow: hidden;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border-soft);
+    overflow: visible;
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
-.card-header {
-    background: var(--primary-brown);
-    color: white;
-    padding: 15px 20px;
-    font-weight: 700;
-    font-size: 16px;
+.form-card__header {
+    background: var(--color-brand-700);
+    color: var(--color-text-on-brand);
+    padding: var(--space-2) var(--space-3);
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-sm);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-1);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
-.card-body {
-    padding: 25px;
+.form-card__body {
+    padding: var(--space-3);
     display: flex;
     flex-direction: column;
-    flex-grow: 1; 
+    flex: 1;
+    gap: var(--space-2);
 }
 
-/* 4. Form Controls */
-.input-group {
-    margin-bottom: 20px;
+/* Toggle option (e.g. logo 3D) */
+.option-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-warning-strong);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
 }
 
-.input-group label {
-    display: block;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--primary-brown);
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
+.option-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-brand-700);
 }
 
-.input-group input[type="text"],
-.input-group select {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1.5px solid var(--border-color);
-    border-radius: 8px;
-    background-color: var(--secondary-beige);
-    color: var(--primary-brown);
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s;
-    box-sizing: border-box;
-}
-
-.input-group input:focus,
-.input-group select:focus {
-    outline: none;
-    border-color: var(--primary-brown);
-    background-color: #fff;
-    box-shadow: 0 0 0 4px rgba(74, 51, 40, 0.05);
-}
-
-/* 5. Design Upload Section */
+/* Upload section */
 .design-upload-section {
-    background: #faf8f5;
-    border: 1px dashed var(--border-color);
-    border-radius: 10px;
-    padding: 20px;
-    margin-top: 10px;
-}
-
-.upload-container {
+    background: var(--color-bg-soft);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-top: var(--space-2);
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: var(--space-3);
+}
+
+.design-upload-section__title {
+    background: var(--color-brand-700);
+    color: var(--color-text-on-brand);
+    margin: calc(var(--space-4) * -1);
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
 }
 
 .upload-item {
     display: flex;
     align-items: center;
-    gap: 15px;
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    gap: var(--space-3);
+    background: var(--color-surface);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-soft);
 }
 
-.file-input {
+.upload-item input[type="file"] {
     flex: 1;
-    font-size: 12px;
+    font-size: var(--fs-xs);
 }
 
-.note-input {
-    width: 150px;
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 12px;
+.upload-item .note-input {
+    flex: 1;
+    min-width: 160px;
+    padding: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    font-size: var(--fs-xs);
 }
 
-/* 6. Size Table Styling */
+@media (max-width: 540px) {
+    .upload-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .upload-item .note-input {
+        width: 100%;
+    }
+}
+
+/* Size table */
 .size-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
 }
 
-.size-table th {
-    background-color: var(--secondary-beige);
-    color: var(--primary-brown);
-    font-weight: 700;
-    font-size: 13px;
-    padding: 12px 5px;
+.size-table-wrap {
+    border-radius: var(--radius-sm);
+    position: relative;
+    z-index: 1;
 }
 
-.size-table td { 
-    text-align: center; 
-    padding: 15px 5px;
+.size-table-wrap::-webkit-scrollbar {
+    display: none;
 }
 
-/* Input default untuk kolom Jumlah Qty */
-.size-table input {
-    width: 80%;
-    max-width: 100px;
-    padding: 10px; 
-    border-radius: 8px;
-    border: 1.5px solid var(--border-color); 
-    text-align: center; 
-    font-weight: 700;
+/* ============================================================
+   Size Table — Compact 2-Column Layout
+   ============================================================ */
+
+.size-table--compact {
+    font-size: var(--fs-sm);
 }
 
-/* 7. Summary Box & Button */
+.size-table--compact th {
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--fs-xs);
+    text-align: center;
+}
+
+.size-table--compact td {
+    padding: var(--space-1);
+    text-align: center;
+}
+
+.size-table--compact tr:has(:focus-within) {
+    background: var(--color-brand-50);
+}
+
+.size-col-size {
+    width: 50px;
+}
+
+.size-col-section {
+    background: var(--color-brand-700);
+    color: var(--color-text-on-brand);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.5px;
+}
+
+.size-col-section--alt {
+    background: var(--color-brand-500);
+}
+
+.size-subheader th {
+    background: var(--color-bg);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-muted);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.size-cell-name {
+    font-weight: var(--fw-bold);
+    color: var(--color-brand-700);
+}
+
+.size-table--compact .qty-input {
+    width: 56px;
+    max-width: 56px;
+    padding: var(--space-1);
+    font-size: var(--fs-xs);
+    text-align: center;
+}
+
+.size-table--compact .qty-input:focus {
+    outline: none;
+    border-color: var(--color-brand-700);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+/* Size table specific overrides for custom select */
+.size-table--compact .custom-select__trigger {
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--fs-xs);
+}
+
+.size-table--compact .custom-select__option {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--fs-xs);
+}
+
+.size-extra-tag {
+    display: block;
+    font-size: var(--fs-2xs);
+    color: var(--color-danger);
+    font-weight: var(--fw-bold);
+}
+
+/* Custom color name input (shown when "Custom" is selected) */
+.custom-color-input {
+    width: 100%;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    font-size: var(--fs-xs);
+    background: var(--color-surface);
+    color: var(--color-text-soft);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.custom-color-input:focus {
+    outline: none;
+    border-color: var(--color-brand-700);
+}
+
+.custom-color-input::placeholder {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.addon-box {
+    background: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    color: var(--color-success-strong);
+    margin-top: var(--space-4);
+}
+
+.addon-box__label {
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.addon-box input {
+    width: 70px;
+    padding: var(--space-1);
+    border: 1px solid var(--color-success-border);
+    border-radius: var(--radius-xs);
+    text-align: center;
+    margin-top: var(--space-1);
+    font-variant-numeric: tabular-nums;
+}
+
+.addon-box small {
+    color: var(--color-text-muted);
+    font-size: var(--fs-2xs);
+    display: block;
+    margin-top: var(--space-1);
+}
+
+/* Order summary */
 .order-summary-box {
-    background: #fdfaf5; 
-    padding: 20px; 
-    border-radius: 12px;
-    border: 2px dashed var(--primary-brown); 
-    margin-top: auto;
+    background: var(--color-bg-soft);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    border: 1.5px dashed var(--color-brand-700);
+    margin-top: var(--space-2);
+    position: relative;
+    z-index: 0;
 }
 
-.status-row { 
-    display: flex; 
-    justify-content: space-between; 
-    margin-bottom: 8px; 
-    font-weight: 700; 
-    color: var(--primary-brown); 
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-1);
+    font-weight: var(--fw-bold);
+    color: var(--color-text-soft);
 }
 
-#totalHarga { 
-    color: var(--accent-green); 
-    font-size: 22px; 
+.summary-row--grand {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border-soft);
 }
 
-.btn-primary-order {
-    background: var(--accent-green); 
-    color: white; 
+#totalHarga {
+    color: var(--color-accent);
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-extrabold);
+    font-variant-numeric: tabular-nums;
+}
+
+#totalQty {
+    font-variant-numeric: tabular-nums;
+}
+
+.summary-helper {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--space-1);
+}
+
+.btn-submit-order {
     width: 100%;
-    border: none; 
-    padding: 15px; 
-    border-radius: 10px;
-    font-size: 16px; 
-    font-weight: 700; 
+    margin-top: var(--space-4);
+}
+
+.upload-section__notes {
+    margin-top: var(--space-3);
+}
+
+/* ---- Addon Selector ---- */
+.addon-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-1);
     cursor: pointer;
-    transition: background 0.3s; 
-    margin-top: 15px;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.btn-primary-order:hover {
-    background: #669961;
+.addon-option:hover {
+    border-color: var(--color-brand-400);
 }
 
-.btn-primary-order:disabled {
-    background: #cbd5e1; 
-    color: #94a3b8; 
-    cursor: not-allowed;
+.addon-option:has(input:checked) {
+    border-color: var(--color-brand-600);
+    background: var(--color-brand-100);
 }
 
-/* --- FIX: Custom Box Keterangan Warna Jersey agar Panjang --- */
-.size-table input.warna-input-inline {
-    width: 100%;
-    max-width: none; /* Mereset batas 100px dari input qty */
-    text-align: left; /* Teks ketikan rata kiri */
-    font-weight: normal; 
-    padding: 8px 12px;
-    box-sizing: border-box;
+.addon-option input[type="checkbox"] {
+    accent-color: var(--color-brand-700);
+    flex-shrink: 0;
 }
-   
+
+.addon-option__info {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    flex: 1;
+    min-width: 0;
+}
+
+.addon-option__name {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-soft);
+}
+
+.addon-option__price {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+/* Input group with prefix (e.g. "Rp") */
+.input-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.input-group__prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-3);
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-right: none;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
+    font-weight: var(--fw-semibold);
+    white-space: nowrap;
+}
+
+.input-group .form-control {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+

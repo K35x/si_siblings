@@ -1,505 +1,388 @@
 <?php
-session_start();
+$pageTitle = 'Invoice - ' . "Siblings.co";
+$pageStyles = ['transactions.css', 'detail-pesanan.css', 'invoice.css'];
 
-date_default_timezone_set('Asia/Jakarta');
+date_default_timezone_set("Asia/Jakarta");
 
-$keranjang = $_SESSION['keranjang'] ?? [];
+$mode          = $mode ?? 'session';
+$order         = $order ?? null;
+$invoiceNumber = $invoice_number ?? ("ORD-" . date('Ymd') . '-0001');
+$customerName  = $customer_name ?? $_SESSION['customer_name'] ?? '-';
+$customerPhone = $customer_phone ?? $_SESSION['customer_phone'] ?? '-';
+$namaProject   = $project_name ?? $_SESSION['project_name'] ?? '';
+$tglPemesanan  = $order_date ?? $_SESSION['order_date'] ?? date('Y-m-d');
+$items         = $items ?? ($_SESSION['keranjang'] ?? []);
+$grandTotal    = (float) ($grand_total ?? 0);
+$detailsByItem = $detailsByItem ?? [];
+$designs       = $designs ?? [];
+$paymentSummary = $payment_summary ?? ['total_paid' => 0, 'total_void' => 0, 'total_refunded' => 0];
 
-// =========================
-// GENERATE INVOICE NUMBER
-// =========================
-$invoice_number = 'INV-' . date('Ymd') . '-' . rand(100,999);
+$totalPaid   = (float) ($paymentSummary['total_paid'] ?? 0);
+$sisaTagihan = (float) ($paymentSummary['remaining_balance'] ?? max(0, $grandTotal - $totalPaid));
+$suggestedInitialPaymentAmount = $grandTotal > 0 ? ceil($grandTotal * Model::DP_THRESHOLD) : 0;
 
-// =========================
-// CUSTOMER
-// =========================
-$customer_name  = $_SESSION['nama'] ?? '-';
-$customer_phone = $_SESSION['customer_phone'] ?? '-';
+$badgeClassMap = [
+    Model::ORDER_STATUS_PENDING_PAYMENT => 'warning',
+    Model::ORDER_STATUS_CONFIRMED       => 'info',
+    Model::ORDER_STATUS_IN_PROGRESS     => 'info',
+    Model::ORDER_STATUS_READY           => 'success',
+    Model::ORDER_STATUS_COMPLETED       => 'success',
+    Model::ORDER_STATUS_CANCELLED       => 'danger',
+];
 
-// =========================
-// GRAND TOTAL
-// =========================
-$grand_total = 0;
+$totalQtyAll = 0;
+foreach ($items as $it) {
+    $totalQtyAll += (int) ($it['quantity'] ?? 0);
+}
 
-foreach ($keranjang as $item) {
-    $grand_total += ($item['harga'] ?? 0);
+$designsByItem = [];
+foreach ($designs as $d) {
+    $designsByItem[(int) $d['order_item_id']][] = $d;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice - Siblings.co</title>
-
-    <link rel="stylesheet" href="<?= asset('css/transactions.css') ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <style>
-
-        /* =========================
-        INVOICE CARD
-        ========================= */
-        .invoice-card {
-            background: white;
-            border-radius: 15px;
-            border: 1.5px solid #4A3328;
-            overflow: hidden;
-            max-width: 850px;
-            margin: 0 auto;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-        }
-
-        .invoice-header {
-            background-color: #4A3328;
-            color: white;
-            padding: 30px 45px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .invoice-body {
-            padding: 45px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 35px;
-        }
-
-        .info-label {
-            font-size: 11px;
-            color: #A39382;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        /* =========================
-        TABLE
-        ========================= */
-        .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .invoice-table th {
-            text-align: left;
-            padding: 15px;
-            border-bottom: 2px solid #E6D5B8;
-            color: #A39382;
-            font-size: 13px;
-        }
-
-        .invoice-table td {
-            padding: 15px;
-            border-bottom: 1px solid #F8F3E9;
-            color: #4A3328;
-            font-size: 14px;
-            vertical-align: top;
-        }
-
-        .row-summary td {
-            border-bottom: none;
-            padding: 8px 15px;
-        }
-
-        .input-dp-box {
-            border: 1.5px solid #79B473;
-            border-radius: 6px;
-            padding: 5px 10px;
-            width: 160px;
-            font-weight: bold;
-            color: #4A3328;
-            text-align: right;
-            outline: none;
-        }
-
-        .total-row {
-            background-color: #fafafa;
-            font-weight: bold;
-            border-top: 2px solid #4A3328 !important;
-        }
-
-        .sisa-tagihan-text {
-            color: #79B473;
-            font-size: 32px;
-            font-weight: 900;
-        }
-
-        .action-btns {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            margin-top: 30px;
-            max-width: 850px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .btn-print {
-            background: #4A3328;
-            color: white;
-            padding: 12px 35px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-print:hover {
-            background: #2d1f18;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        /* =========================
-        PRINT
-        ========================= */
-        @media print {
-
-            .sidebar,
-            .header-photo,
-            .action-btns {
-                display: none !important;
-            }
-
-            .container {
-                display: block;
-            }
-
-            body {
-                background: white;
-            }
-
-            .content-padding {
-                padding: 0;
-            }
-
-            .invoice-card {
-                border: 1px solid #4A3328;
-                box-shadow: none;
-                width: 100%;
-                border-radius: 0;
-            }
-
-            .invoice-header {
-                background-color: #4A3328 !important;
-                -webkit-print-color-adjust: exact;
-            }
-
-            .input-dp-box {
-                border: none;
-                text-align: right;
-                padding: 0;
-            }
-
-            @page {
-                size: A4;
-                margin: 15mm;
-            }
-        }
-
-    </style>
+    <?php include __DIR__ . '/../partials/head.php'; ?>
 </head>
-
 <body>
+<a href="#main-content" class="skip-to-content">Lewati ke konten utama</a>
+<?php include __DIR__ . '/../partials/sidebar-toggle.php'; ?>
 
-<div class="container">
+<div class="app-shell">
+    <?php
+$sidebarRole = $sidebarRole ?? Model::ROLE_KASIR;
+$activeMenu  = $activeMenu  ?? '';
+include __DIR__ . '/../layouts/sidebar.php';
+?>
 
-    <?php include __DIR__ . '/includes/sidebar.php'; ?>
+    <main class="app-main" id="main-content">
+        <div class="header-photo" aria-hidden="true"></div>
 
-    <main class="main-content">
+        <div class="app-content">
+            <?php if ($mode === 'session'): ?>
+                <?php $currentStep = 5; include __DIR__ . '/includes/step-indicator.php'; ?>
+            <?php endif; ?>
 
-        <?php include __DIR__ . '/includes/header.php'; ?>
-
-        <div class="content-padding">
-
-            <div class="invoice-card">
-
-                <!-- =========================
-                HEADER
-                ========================= -->
-                <div class="invoice-header">
-
-                    <div>
-                        <h2 style="font-style: italic; letter-spacing: 1px;">
-                            Siblings.co
-                        </h2>
-
-                        <p style="font-size: 11px; opacity: 0.8;">
-                            Konveksi & Sablon Profesional
-                        </p>
+            <article class="invoice-card" aria-label="Invoice <?= e($invoiceNumber) ?>">
+                <!-- Header -->
+                <header class="invoice-header">
+                    <div class="invoice-header__brand">
+                        <h2><?= e("Siblings.co") ?></h2>
+                        <p><?= e("Konveksi & Sablon Profesional") ?></p>
                     </div>
-
-                    <div style="text-align: right;">
-
-                        <h3 style="font-size: 20px; letter-spacing: 2px;">
-                            INVOICE
-                        </h3>
-
-                        <p style="font-size: 12px; opacity: 0.8;">
-                            #<?= $invoice_number; ?>
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- =========================
-                BODY
-                ========================= -->
-                <div class="invoice-body">
-
-                    <div class="info-grid">
-
-                        <div class="info-group">
-
-                            <p class="info-label">
-                                Dipesan Oleh:
-                            </p>
-
-                            <p style="font-weight: bold; font-size: 16px;">
-                                <?= $customer_name; ?>
-                            </p>
-
-                            <p style="color: #666; font-size: 13px;">
-                                <?= $customer_phone; ?>
-                            </p>
-
-                        </div>
-
-                        <div class="info-group" style="text-align: right;">
-
-                            <p class="info-label"> Tanggal Pesanan:</p>
-                            <p style="font-weight: bold;">
-                                <?= date('d F Y'); ?>
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <!-- =========================
-                         TABLE
-                    ========================= -->
-                    <table class="invoice-table">
-
-                        <thead>
-
-                        <tr>
-                            <th>Item Deskripsi</th>
-                            <th style="text-align:center;">Qty</th>
-                            <th style="text-align:right;">Harga Satuan</th>
-                            <th style="text-align:right;">Subtotal</th>
-                        </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                        <?php if(!empty($keranjang)): ?>
-
-                            <?php foreach($keranjang as $item): ?>
-
-                                <tr>
-
-                                    <td>
-
-                                        <strong>
-                                            <?= $item['kategori']; ?>
-                                        </strong>
-
-                                        <br>
-
-                                        <small>
-                                            <?= $item['bahan']; ?>
-                                            (<?= $item['warna']; ?>)
-                                        </small>
-
-                                        <br>
-
-                                        <small>
-                                            Sablon :
-                                            <?= $item['sablon']; ?>
-                                        </small>
-
-                                    </td>
-
-                                    <td style="text-align:center;">
-
-                                        <?= $item['qty']; ?> pcs
-
-                                    </td>
-
-                                    <td style="text-align:right;">
-
-                                        Rp <?= number_format(($item['harga'] / max($item['qty'],1)),0,',','.'); ?>
-
-                                    </td>
-
-                                    <td style="text-align:right;">
-
-                                        Rp <?= number_format($item['harga'],0,',','.'); ?>
-
-                                    </td>
-
-                                </tr>
-
-                            <?php endforeach; ?>
-
-                        <?php else: ?>
-
-                            <tr>
-                                <td colspan="4" style="text-align:center; padding:40px;">
-                                    Keranjang kosong
-                                </td>
-                            </tr>
-
+                    <div class="invoice-header__meta">
+                        <span class="invoice-badge">INVOICE</span>
+                        <span class="invoice-number">#<?= e($invoiceNumber) ?></span>
+                        <?php if ($order): ?>
+                            <?php $statusInfo = Model::ORDER_STATUS_MAP[$order['order_status']] ?? null; ?>
+                            <?php if ($statusInfo): ?>
+                                <span class="invoice-status-badge invoice-status-badge--<?= e($badgeClassMap[$order['order_status']] ?? 'info') ?>">
+                                    <i class="fas <?= e($statusInfo['icon']) ?>" aria-hidden="true"></i>
+                                    <?= e($statusInfo['label']) ?>
+                                </span>
+                            <?php endif; ?>
                         <?php endif; ?>
-
-
-                        <!-- =========================
-                             INPUT DP
-                        ========================= -->
-                        <tr class="row-summary" style="height: 60px;">
-
-                            <td colspan="3"
-                                style="text-align:right; vertical-align:middle; color:#A39382; font-weight:bold;">
-
-                                NOMINAL DP:
-
-                            </td>
-
-                            <td style="text-align:right; vertical-align:middle;">
-
-                                <input
-                                        type="text"
-                                        id="displayDP"
-                                        class="input-dp-box"
-                                        placeholder="0"
-                                        oninput="formatRupiah(this)"
-                                >
-
-                            </td>
-
-                        </tr>
-
-
-                        <!-- =========================
-                             TOTAL
-                        ========================= -->
-                        <tr class="total-row">
-
-                            <td colspan="3"
-                                style="text-align:right; padding:20px;">
-
-                                TOTAL TAGIHAN
-
-                            </td>
-
-                            <td style="text-align:right; padding:20px;">
-
-                                Rp <?= number_format($grand_total,0,',','.'); ?>
-
-                            </td>
-
-                        </tr>
-
-                        </tbody>
-
-                    </table>
-
-
-                    <!-- =========================
-                         SISA TAGIHAN
-                    ========================= -->
-                    <div style="text-align:right; margin-top:10px;">
-
-                        <p style="font-size:12px; color:#A39382; font-weight:bold;">
-                            SISA YANG HARUS DIBAYAR:
-                        </p>
-
-                        <h2 class="sisa-tagihan-text" id="sisaTagihan">
-
-                            Rp <?= number_format($grand_total,0,',','.'); ?>
-
-                        </h2>
-
                     </div>
+                </header>
 
+                <!-- Customer & Order Info -->
+                <div class="invoice-info">
+                    <div class="invoice-info__block">
+                        <p class="info-label">Dipesan Oleh</p>
+                        <p class="info-value"><?= e($customerName) ?></p>
+                        <?php if ($customerPhone !== '-'): ?>
+                            <p class="info-sub" translate="no"><?= e($customerPhone) ?></p>
+                        <?php endif; ?>
+                        <?php if ($namaProject): ?>
+                            <p class="info-sub"><i class="fas fa-clipboard" aria-hidden="true"></i> <?= e($namaProject) ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="invoice-info__block invoice-info__block--right">
+                        <p class="info-label">Tanggal Pesanan</p>
+                        <p class="info-value--sm"><?= e(format_date_id($tglPemesanan)) ?></p>
+                        <p class="info-sub"><?= e($totalQtyAll) ?> pcs &middot; <?= count($items) ?> item</p>
+                    </div>
                 </div>
 
-            </div>
+                <!-- Items -->
+                <?php if (!empty($items)): ?>
+                    <?php foreach ($items as $idx => $item):
+                        $kategori = $item['product_name_snapshot'] ?? ($item['category_name'] ?? ($item['category'] ?? 'Item'));
+                        $bahan = $item['variant_name_snapshot'] ?? ($item['material'] ?? '-');
+                        $sablon = $item['sablon_name'] ?? ($item['sablon'] ?? '-');
+                        $itemDesigns = $designsByItem[(int) ($item['order_item_id'] ?? 0)] ?? [];
+                        $itemDetails = $detailsByItem[(int) ($item['order_item_id'] ?? 0)] ?? [];
+                        $itemSubtotal = (float) ($item['subtotal'] ?? ($item['price'] ?? 0));
+                        $itemQty = (int) ($item['quantity'] ?? 0);
+                        $computedItemSubtotal = 0;
+                        foreach ($itemDetails as $d) {
+                            $qty = (int) ($d['_total_qty'] ?? $d['quantity'] ?? 0);
+                            $isLong = ($d['sleeve_type'] ?? 'short') === 'long';
+                            $hargaBase = (float) ($item['unit_price'] ?? 0);
+                            $xxlSurcharge = (float) ($d['price_surcharge'] ?? 0);
+                            $longSurcharge = $isLong ? (float) ($item['sleeve_price'] ?? 0) : 0;
+                            $sablonPrice = (float) ($item['sablon_price'] ?? 0);
+                            $computedItemSubtotal += ($hargaBase + $xxlSurcharge + $longSurcharge + $sablonPrice) * $qty;
+                        }
+                        $displayItemSubtotal = !empty($itemDetails) ? $computedItemSubtotal : $itemSubtotal;
+                    ?>
+                        <div class="invoice-item">
+                            <div class="invoice-item__header">
+                                <strong class="invoice-item__name"><?= e($kategori) ?></strong>
+                                <span class="tabular-nums invoice-item__subtotal"><?= e(format_currency($displayItemSubtotal)) ?></span>
+                            </div>
+                            <div class="invoice-item__specs">
+                                <?php if ($bahan !== '-'): ?>
+                                    <span><strong>Bahan:</strong> <?= e($bahan) ?></span>
+                                <?php endif; ?>
+                                <?php if ($sablon !== '-'): ?>
+                                    <span><strong>Sablon:</strong> <?= e($sablon) ?>
+                                        <?php if (!empty($item['sablon_price'])): ?>
+                                            (<?= e(format_currency($item['sablon_price'])) ?>/pcs)
+                                        <?php endif; ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
 
+                            <?php if (!empty($item['warna_summary']['short'])): ?>
+                                <div class="invoice-item__specs">
+                                    <span><strong>Pendek:</strong> <?= e($item['warna_summary']['short']) ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($item['warna_summary']['long'])): ?>
+                                <div class="invoice-item__specs">
+                                    <span><strong>Panjang:</strong> <?= e($item['warna_summary']['long']) ?></span>
+                                </div>
+                            <?php endif; ?>
 
-            <!-- =========================
-                 BUTTON
-            ========================= -->
+                            <!-- Rincian table (size/color/sleeve breakdown) -->
+                            <?php if (!empty($itemDetails)): ?>
+                                <div class="detail-item-rincian">
+                                    <div class="detail-item-rincian__table-wrap">
+                                        <table class="detail-item-rincian__table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Size</th>
+                                                    <th>Qty</th>
+                                                    <th>Warna</th>
+                                                    <th>Lengan</th>
+                                                    <th>Stok</th>
+                                                    <th>Harga &times; Qty</th>
+                                                    <th>Subtotal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($itemDetails as $d):
+                                                    $sz = $d['size_name'] ?? '?';
+                                                    $color = $d['color_name'] ?? '-';
+                                                    $qty = (int) ($d['_total_qty'] ?? $d['quantity'] ?? 0);
+                                                    $readyQty = (int) ($d['_ready_qty'] ?? 0);
+                                                    $customQty = (int) ($d['_custom_qty'] ?? 0);
+                                                    $isLong = ($d['sleeve_type'] ?? 'short') === 'long';
+                                                    $hargaBase = (float) ($item['unit_price'] ?? 0);
+                                                    $xxlSurcharge = (float) ($d['price_surcharge'] ?? 0);
+                                                    $longSurcharge = $isLong ? (float) ($item['sleeve_price'] ?? 0) : 0;
+                                                    $sablonPrice = (float) ($item['sablon_price'] ?? 0);
+                                                    $hargaFinal = $hargaBase + $xxlSurcharge + $longSurcharge + $sablonPrice;
+                                                ?>
+                                                    <tr>
+                                                        <td><?= e($sz) ?></td>
+                                                        <td class="tabular-nums"><?= e($qty) ?></td>
+                                                        <td><?= e($color) ?></td>
+                                                        <td><?= $isLong ? 'Panjang' : 'Pendek' ?></td>
+                                                        <td>
+                                                            <?php if ($readyQty > 0): ?>
+                                                                <span class="badge badge--success"><?= e($readyQty) ?> Ready</span>
+                                                            <?php endif; ?>
+                                                            <?php if ($customQty > 0): ?>
+                                                                <span class="badge badge--warning"><?= e($customQty) ?> Buat</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td class="tabular-nums"><?= e(format_currency($hargaFinal)) ?> &times; <?= e($qty) ?></td>
+                                                        <td class="tabular-nums"><?= e(format_currency($hargaFinal * $qty)) ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="6">Total (<?= e($itemQty) ?> pcs)</td>
+                                                    <td class="tabular-nums"><?= e(format_currency($displayItemSubtotal)) ?></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <!-- Surcharges (session mode) -->
+                            <?php if ($mode === 'session'): ?>
+                                <?php
+                                $sc = $item['surcharge'] ?? [];
+                                ?>
+                                <?php if (($sc['xxl_qty'] ?? 0) > 0 || ($sc['long_qty'] ?? 0) > 0): ?>
+                                    <div class="item-surcharges">
+                                        <?php if (($sc['long_qty'] ?? 0) > 0): ?>
+                                            <span>+Lengan Panjang (<?= e($sc['long_qty']) ?>×<?= e(format_currency($sc['long_rate'] ?? 5000)) ?>)</span>
+                                        <?php endif; ?>
+                                        <?php if (($sc['xxl_qty'] ?? 0) > 0): ?>
+                                            <span>+XXL (<?= e($sc['xxl_qty']) ?>×<?= e(format_currency($sc['xxl_qty'] > 0 ? $sc['xxl_total'] / $sc['xxl_qty'] : 0)) ?>)</span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <!-- Design gallery -->
+                            <?php if (!empty($itemDesigns)): ?>
+                                <div class="detail-item-designs">
+                                    <span class="detail-item-designs__label"><i class="fas fa-image" aria-hidden="true"></i> Desain:</span>
+                                    <div class="design-gallery design-gallery--compact">
+                                        <?php foreach ($itemDesigns as $d):
+                                            $fn = $d['filename'];
+                                            $ext = strtolower(pathinfo($fn, PATHINFO_EXTENSION));
+                                            $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true);
+                                            $fileUrl = url('uploads/desain/' . $fn);
+                                        ?>
+                                            <div class="design-gallery__item-wrap">
+                                                <?php if ($isImage): ?>
+                                                    <a class="design-gallery__item" href="<?= e($fileUrl) ?>" target="_blank" rel="noopener">
+                                                        <img src="<?= e($fileUrl) ?>" alt="<?= e($d['notes'] ?: 'Desain') ?>" loading="lazy">
+                                                    </a>
+                                                <?php else: ?>
+                                                    <a class="design-gallery__item design-gallery__item--file" href="<?= e($fileUrl) ?>" target="_blank" rel="noopener">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <span class="design-gallery__label"><?= e($d['notes'] ?: $fn) ?></span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($item['item_notes']) || !empty($item['catatan'])): ?>
+                                <div class="invoice-item__catatan"><i class="fas fa-sticky-note" aria-hidden="true"></i> <?= e($item['item_notes'] ?? $item['catatan']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="invoice-empty">Tidak ada item.</div>
+                <?php endif; ?>
+
+                <!-- Summary -->
+                <div class="invoice-summary">
+                    <div class="invoice-summary__rows">
+                        <div class="summary-row summary-row--total">
+                            <span>TOTAL TAGIHAN</span>
+                            <span class="tabular-nums"><?= e(format_currency($grandTotal)) ?></span>
+                        </div>
+
+                        <?php if ($mode === 'database'): ?>
+                            <div class="summary-row summary-row--paid">
+                                <span><i class="fas fa-check-circle" aria-hidden="true"></i> Sudah Dibayar</span>
+                                <span class="tabular-nums"><?= e(format_currency($totalPaid)) ?></span>
+                            </div>
+                            <?php if ($sisaTagihan > 0): ?>
+                                <div class="summary-row summary-row--sisa">
+                                    <span>Sisa Tagihan</span>
+                                    <span class="tabular-nums"><?= e(format_currency($sisaTagihan)) ?></span>
+                                </div>
+                            <?php else: ?>
+                                <div class="summary-row summary-row--lunas">
+                                    <span class="lunas-text">LUNAS</span>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Footer (visible in print) -->
+                <footer class="invoice-footer">
+                    <p>Terima kasih atas pesanan Anda. Pembayaran dapat dilakukan via Transfer Bank atau Tunai.</p>
+                    <p class="invoice-footer__contact"><?= e("Siblings.co") ?> &middot; <?= e("Konveksi & Sablon Profesional") ?> &middot; Telp/WA: <?= e("0812-XXXX-XXXX") ?></p>
+                </footer>
+            </article>
+
+            <?php if ($mode === 'session' && !empty($_SESSION['error'])): ?>
+                <div class="invoice-flash no-print">
+                    <div class="alert alert--danger" role="alert"><?= e($_SESSION['error']) ?></div>
+                    <?php unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($mode === 'session'): ?>
+                <article class="detail-card detail-card--payment-form invoice-payment-card no-print">
+                    <div class="detail-card__header">
+                        <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                        Pembayaran / DP
+                    </div>
+                    <div class="detail-card__body">
+                        <div class="payment-form payment-form--initial">
+                            <div class="payment-form__row">
+                                <div class="payment-form__field">
+                                    <label for="initial_payment_method">Metode Bayar</label>
+                                    <select name="initial_payment_method" id="initial_payment_method" form="storeOrderForm">
+                                        <?php foreach (Model::PAYMENT_METHODS as $val => $label): ?>
+                                            <option value="<?= e($val) ?>"><?= e($label) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="payment-form__field">
+                                    <label for="initial_payment_amount">Jumlah DP (Rp)</label>
+                                    <input type="number" name="initial_payment_amount" id="initial_payment_amount" min="0" step="any"
+                                           value="<?= e($suggestedInitialPaymentAmount > 0 ? $suggestedInitialPaymentAmount : '') ?>"
+                                           max="<?= e($grandTotal) ?>"
+                                           step="1"
+                                           placeholder="0 = tanpa pembayaran sekarang" form="storeOrderForm">
+                                </div>
+                                <div class="payment-form__field">
+                                    <label for="initial_payment_date">Tanggal</label>
+                                    <input type="date" name="initial_payment_date" id="initial_payment_date" value="<?= e(date('Y-m-d')) ?>" form="storeOrderForm">
+                                </div>
+                            </div>
+                            <p class="payment-form__hint">
+                                Kosongkan atau isi 0 jika belum ada pembayaran. Nominal default <?= e((int) (Model::DP_THRESHOLD * 100)) ?>% dari total.
+                            </p>
+                        </div>
+                    </div>
+                </article>
+            <?php endif; ?>
+
+            <!-- Actions -->
             <div class="action-btns">
-
-                <button class="btn-print" onclick="window.print()">
-                    <i class="fas fa-print"></i> Simpan PDF
-                </button>
-
-                <a href="<?= url('/transactions') ?>"
-                   style="text-decoration:none; color:#4A3328; font-weight:bold; font-size:14px; align-self:center;">
-
-                    Selesai
-
+                <a href="<?= url('/transactions') ?>" class="btn btn--ghost">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    Kembali
                 </a>
-
+                <div class="action-btns__right">
+                    <button type="button" class="btn btn--outline" data-action="print-invoice">
+                        <i class="fas fa-print" aria-hidden="true"></i>
+                        Cetak
+                    </button>
+                    <?php if ($mode === 'session'): ?>
+                        <form id="storeOrderForm" action="<?= url('/transactions/store') ?>" method="POST" class="display-inline">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="invoice_number" value="<?= e($invoiceNumber) ?>">
+                            <button type="submit" class="btn btn--accent btn--lg" data-loading-label="Menyimpan…">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                Simpan Pesanan
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
             </div>
-
         </div>
-
     </main>
-
 </div>
 
-
-<!-- =========================
-     JAVASCRIPT
-========================= -->
+<script src="<?= asset('js/ui.js') ?>"></script>
 <script>
+    (function () {
+        document.querySelector('[data-action="print-invoice"]')?.addEventListener('click', () => {
+            window.print();
+        });
 
-    function formatRupiah(input)
-    {
-        let value = input.value.replace(/[^0-9]/g, '');
-
-        let formatted = new Intl.NumberFormat('id-ID').format(value);
-
-        if (value === "") {
-
-            input.value = "";
-
-            updateSisa(0);
-
-        } else {
-
-            input.value = formatted;
-
-            updateSisa(parseInt(value));
-        }
-    }
-
-
-    function updateSisa(dpValue)
-    {
-        const total = <?= $grand_total; ?>;
-
-        const sisa = total - dpValue;
-
-        document.getElementById('sisaTagihan').innerText =
-            "Rp " + new Intl.NumberFormat('id-ID').format(sisa);
-    }
-
+    })();
 </script>
-
 </body>
 </html>

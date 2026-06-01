@@ -2,7 +2,7 @@
 
 class App
 {
-    public static function run(array $routes): void
+    public static function run(array $routes, array $publicRoutes = [], array $roleMap = []): void
     {
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         $basePath = app_base_url();
@@ -22,14 +22,72 @@ class App
             $path = substr($path, strlen('/index.php'));
         }
 
-        if (!array_key_exists($path, $routes)) {
-            http_response_code(404);
-            echo 'Halaman tidak ditemukan';
-            return;
+        // Try exact match first
+        if (array_key_exists($path, $routes)) {
+            [$controllerClass, $method] = $routes[$path];
+        } else {
+            // Try dynamic route match
+            $matched = false;
+            foreach ($routes as $pattern => $handler) {
+                if (strpos($pattern, '{category}') !== false) {
+                    $basePattern = str_replace('{category}', '', $pattern);
+                    if (strpos($path, $basePattern) === 0) {
+                        $category = substr($path, strlen($basePattern));
+                        if (!empty($category)) {
+                            [$controllerClass, $method] = $handler;
+                            $_GET['category'] = $category;
+                            $matched = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!$matched) {
+                self::renderError(404);
+                return;
+            }
         }
 
-        [$controllerClass, $method] = $routes[$path];
-        $controller = new $controllerClass();
-        $controller->{$method}();
+        // Auth guard
+        if (!in_array($path, $publicRoutes, true)) {
+            if (!isset($_SESSION['user'])) {
+                header('Location: ' . url('/login'));
+                exit;
+            }
+
+            // RBAC check
+            if (isset($roleMap[$path])) {
+                $allowedRoles = $roleMap[$path];
+                if (!in_array($_SESSION['user']['role'], $allowedRoles, true)) {
+                    self::renderError(403);
+                    exit;
+                }
+            }
+        }
+
+        if ($method === 'dynamicForm') {
+            $controller = new $controllerClass();
+            $controller->$method($_GET['category'] ?? '');
+        } else {
+            $controller = new $controllerClass();
+            $controller->$method();
+        }
+    }
+
+    private static function renderError(int $statusCode): void
+    {
+        http_response_code($statusCode);
+
+        $data = [
+            'statusCode' => $statusCode,
+            'title' => $statusCode === 403 ? 'Akses ditolak' : 'Halaman tidak ditemukan',
+            'message' => $statusCode === 403
+                ? 'Akun kamu tidak punya izin untuk membuka halaman ini.'
+                : 'Alamat yang kamu tuju tidak tersedia atau sudah dipindahkan.',
+        ];
+
+        extract($data, EXTR_SKIP);
+        require __DIR__ . '/../views/errors/error.php';
+        exit;
     }
 }

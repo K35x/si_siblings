@@ -1,284 +1,181 @@
+<?php
+$pageTitle = "Dashboard Kasir - Siblings.co";
+$pageStyles = ["dashboard.css"];
+
+$stats = $stats ?? [];
+$queue = $queue ?? [];
+
+$statIcons = [
+    "Pesanan Baru" => "fa-bag-shopping",
+    "Sedang Diproses" => "fa-shirt",
+    "Siap Diambil" => "fa-box-open",
+    "Omzet Hari Ini" => "fa-wallet",
+];
+
+$statusBadges = Model::BADGE_STATUS_MAP;
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siblings.co - Dashboard Kasir</title>
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="<?= asset('css/dashboard-cashier.css') ?>">
+    <?php include __DIR__ . "/../partials/head.php"; ?>
 </head>
 <body>
+<a href="#main-content" class="skip-to-content">Lewati ke konten utama</a>
+<?php include __DIR__ . "/../partials/sidebar-toggle.php"; ?>
 
-<div class="container">
-
+<div class="app-shell">
     <?php
-    $sidebarRole = 'kasir';
-    $activeMenu = 'dashboard';
-    include __DIR__ . '/sidebar.php';
+    $sidebarRole = Model::ROLE_KASIR;
+    $activeMenu = "dashboard";
+    include __DIR__ . "/sidebar.php";
     ?>
 
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
+    <main class="app-main" id="main-content">
+        <div class="header-photo" aria-hidden="true"></div>
 
-        <!-- HEADER -->
-        <div class="header-photo"></div>
+        <div class="app-content dashboard-page dashboard-page--cashier">
+            <h1 id="dashboard-title">Dashboard Kasir</h1>
 
-        <!-- CONTENT -->
-        <div class="content">
+            <section class="dashboard-stats" aria-label="Statistik pesanan hari ini">
+                <?php foreach ($stats as $index => $stat): ?>
+                    <?php $icon =
+                        $statIcons[$stat["label"]] ?? "fa-chart-line"; ?>
+                    <article class="dashboard-stat dashboard-stat--<?= e(
+                        (string) (($index % 4) + 1),
+                    ) ?>">
+                        <span class="dashboard-stat__icon" aria-hidden="true"><i class="fas <?= e(
+                            $icon,
+                        ) ?>"></i></span>
+                        <span class="dashboard-stat__content">
+                            <span class="dashboard-stat__label"><?= e(
+                                $stat["label"],
+                            ) ?></span>
+                            <strong class="dashboard-stat__value"><?= e(
+                                $stat["value"],
+                            ) ?></strong>
+                        </span>
+                    </article>
+                <?php endforeach; ?>
+            </section>
 
-            <!--CARD STATISTIK -->
-            <div class="cards">
-
-                <div class="card-custom">
-                    <h2 id="pesananBaru">12</h2>
-                    <p>Pesanan Baru</p>
-                </div>
-
-                <div class="card-custom">
-                    <h2 id="diproses">4</h2>
-                    <p>Sedang Diproses</p>
-                </div>
-
-                <div class="card-custom">
-                    <h2 id="siap">8</h2>
-                    <p>Siap Diambil</p>
-                </div>
-
-                <div class="card-custom">
-                    <h2 id="belumlunas">15</h2>
-                    <p>Belum Lunas</p>
-                </div>
-
-            </div>
-
-            <!--BAGIAN BAWAH-->
-            <div class="bottom">
-
-                <!-- TAMBAH PESANAN -->
-                <div class="box add-order-card">
-                <div class="add-icon">
-                  <i class="fas fa-plus"></i>
-                </div>
-
-                <h3>Tambah Pesanan</h3>
-
-                <button class="btn-add-order">
-                + Buat Pesanan
-                </button>
-            </div>
-
-                <!-- AKTIVITAS TERAKHIR -->
-                <div class="box activity-card">
-
-                    <div class="activity-header">
-                        <h3>Aktivitas Terakhir</h3>
-                        <button class="btn-view-all" onclick="openActivityModal()">
-                            Lihat Semua
-                        </button>
+            <section class="dashboard-grid dashboard-grid--cashier">
+                <aside class="panel quick-actions" aria-label="Aksi cepat">
+                    <div class="panel__header">
+                        <div>
+                            <h3 class="panel__title">
+                                <i class="fas fa-bolt" aria-hidden="true"></i>
+                                Menu Kasir
+                            </h3>
+                        </div>
                     </div>
-
-                    <div class="activity-list">
-
-                        <div class="activity-item">
-                            <span class="activity-time">10.17</span>
-                            <span class="activity-text">Menambahkan pesanan</span>
+                    <div class="panel__body">
+                        <a href="<?= url(
+                            "/transactions/create",
+                        ) ?>" class="quick-actions__cta">
+                            <span class="quick-actions__cta-icon"><i class="fas fa-plus" aria-hidden="true"></i></span>
+                            <span>
+                                <strong>Buat Pesanan Baru</strong>
+                                <small>Input customer, produk, ukuran, dan pembayaran.</small>
+                            </span>
+                        </a>
+                        <div class="quick-actions__shortcuts">
+                            <a href="<?= url(
+                                "/transactions?status=pending_payment",
+                            ) ?>" class="quick-action-link">
+                                <span class="quick-action-link__icon"><i class="fas fa-clock"></i></span>
+                                <span class="quick-action-link__label">Belum Dibayar</span>
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                            <a href="<?= url(
+                                "/transactions?status=ready",
+                            ) ?>" class="quick-action-link">
+                                <span class="quick-action-link__icon"><i class="fas fa-check-double"></i></span>
+                                <span class="quick-action-link__label">Siap Diambil</span>
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                            <a href="<?= url(
+                                "/transactions",
+                            ) ?>" class="quick-action-link">
+                                <span class="quick-action-link__icon"><i class="fas fa-list-check"></i></span>
+                                <span class="quick-action-link__label">Semua Pesanan</span>
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            </a>
                         </div>
+                    </div>
+                </aside>
 
-                        <div class="activity-item">
-                            <span class="activity-time">10.50</span>
-                            <span class="activity-text">Menerima pembayaran dari Ahmad</span>
+                <div class="panel queue-panel">
+                    <div class="panel__header">
+                        <div>
+                            <h3 class="panel__title">
+                                <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                                Antrian Pesanan
+                            </h3>
                         </div>
-
-                        <div class="activity-item">
-                            <span class="activity-time">11.07</span>
-                            <span class="activity-text">Menambahkan pesanan</span>
-                        </div>
-
-                        <div class="activity-item">
-                            <span class="activity-time">11.26</span>
-                            <span class="activity-text">Menerima pembayaran dari SMA 2</span>
-                        </div>
-
-                        <div class="activity-item">
-                            <span class="activity-time">12.09</span>
-                            <span class="activity-text">Menambahkan pesanan</span>
-                        </div>
-
+                        <a href="<?= url(
+                            "/transactions",
+                        ) ?>" class="panel__link">Kelola</a>
+                    </div>
+                    <div class="panel__body scroll-thin">
+                        <?php if (!empty($queue)): ?>
+                            <ul class="queue-list">
+                                <?php foreach ($queue as $order): ?>
+                                    <?php
+                                    $status =
+                                        $order["status"] ?? "pending_payment";
+                                    $label =
+                                        $order["label"] ?? ucfirst($status);
+                                    $custom = $order["customer"] ?? "-";
+                                    $badgeClass =
+                                        $statusBadges[$status] ??
+                                        "badge--neutral";
+                                    ?>
+                                    <li class="queue-item" data-status="<?= e(
+                                        $status,
+                                    ) ?>">
+                                        <a class="queue-item__main" href="<?= url(
+                                            "/transactions/detail?id=" .
+                                                urlencode(
+                                                    (string) $order["id"],
+                                                ),
+                                        ) ?>">
+                                            <span class="queue-item__marker" aria-hidden="true"></span>
+                                            <span>
+                                                <strong class="queue-item__id">#<?= e(
+                                                    $order["id"],
+                                                ) ?></strong>
+                                                <small class="queue-item__customer"><?= e(
+                                                    $custom,
+                                                ) ?> &middot; <?= e(
+     format_date_id($order["tanggal"] ?? null),
+ ) ?></small>
+                                            </span>
+                                        </a>
+                                        <span class="badge <?= e(
+                                            $badgeClass,
+                                        ) ?>">
+                                            <i class="fas <?= $status ===
+                                            "ready"
+                                                ? "fa-check"
+                                                : "fa-circle-notch" ?>" aria-hidden="true"></i>
+                                            <?= e($label) ?>
+                                        </span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <div class="dashboard-empty">
+                                <i class="fas fa-inbox" aria-hidden="true"></i>
+                                <p>Antrian kosong. Saatnya siap menerima order baru.</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
-
-                <!-- ANTRIAN -->
-                <div class="box order-card">
-                  <div class="order-header">
-                   <h3>Antrian Pesanan</h3>
-                
-                <select id="filterStatus">
-                  <option value="">Semua Status</option>
-                  <option value="Proses">Proses</option>
-                  <option value="Selesai">Selesai</option>
-                </select>
-            </div>
-
-                <div class="order-list">
-                <div class="order-item" data-status="Proses">
-                   <div>
-                   <b>#INV001</b>
-                   <p>Ahmad</p>
-                  </div>
-                  <span class="status process">Proses</span>
-                </div>
-
-                <div class="order-item" data-status= "Proses">
-                   <div>
-                   <b>#INV002</b>
-                   <p>Andi</p>
-                  </div>
-                  <span class="status process">Proses</span>
-                </div>
-
-                <div class="order-item" data-status="Selesai">
-                  <div>
-                  <b>#INV003</b>
-                  <p>Nisa</p>
-                  </div>
-                  <span class="status done">Selesai</span>
-                </div>
-                
-            </div>
-         </div>
-
+            </section>
         </div>
-    </div>
+    </main>
 </div>
 
-<!-- MODAL AKTIVITAS -->
-<div class="modal-overlay" id="activityModal">
-    <div class="activity-modal">
-
-        <div class="modal-header">
-            <h3>Aktivitas Terakhir (Semua)</h3>
-            <button class="modal-close" onclick="closeActivityModal()">
-                &times;
-            </button>
-        </div>
-
-        <div class="modal-body">
-            <table class="activity-table">
-                <thead>
-                    <tr>
-                        <th>Waktu</th>
-                        <th>Aktivitas</th>
-                        <th>Oleh</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>10.17</td>
-                        <td>Menambahkan pesanan</td>
-                        <td>Kasir</td>
-                    </tr>
-                    <tr>
-                        <td>10.50</td>
-                        <td>Menerima pembayaran dari Ahmad</td>
-                        <td>Kasir</td>
-                    </tr>
-                    <tr>
-                        <td>11.07</td>
-                        <td>Menambahkan pesanan</td>
-                        <td>Kasir</td>
-                    </tr>
-                    <tr>
-                        <td>11.26</td>
-                        <td>Menerima pembayaran dari SMA 2</td>
-                        <td>Kasir</td>
-                    </tr>
-                    <tr>
-                        <td>12.09</td>
-                        <td>Menambahkan pesanan</td>
-                        <td>Kasir</td>
-                    </tr> 
-                    <tr>
-                        <td>12.09</td>
-                        <td>Menambahkan pesanan</td>
-                        <td>Kasir</td>
-                    </tr>
-                    <tr>
-                        <td>12.09</td>
-                        <td>Menambahkan pesanan</td>
-                        <td>Kasir</td>
-                    </tr>
-                    <tr>
-                        <td>12.09</td>
-                        <td>Menambahkan pesanan</td>
-                        <td>Kasir</td>
-                    </tr>
-                    
-            
-                </tbody>
-            </table>
-        </div>
-
-        <div class="modal-footer">
-            <button class="btn-close" onclick="closeActivityModal()">
-                Tutup
-            </button>
-        </div>
-
-    </div>
-</div>
-
-<!-- JAVASCRIPT -->
-<script>
-  // ===============================
-  // MODAL AKTIVITAS
-  // ===============================
-  function openActivityModal() {
-    document
-      .getElementById("activityModal")
-      .classList.add("show");
-  }
-
-  function closeActivityModal() {
-    document
-      .getElementById("activityModal")
-      .classList.remove("show");
-  }
-
-  // Klik area gelap untuk menutup modal
-  window.addEventListener("click", function (e) {
-    const modal = document.getElementById("activityModal");
-
-    if (e.target === modal) {
-      closeActivityModal();
-    }
-  });
-
-  // FILTER STATUS ANTRIAN INVOICE
-document.addEventListener("DOMContentLoaded", function () {
-  const filter = document.getElementById("filterStatus");
-  if (!filter) return;
-
-  filter.addEventListener("change", filterInvoice);
-
-  function filterInvoice() {
-    const status = filter.value;
-
-    document.querySelectorAll(".order-item").forEach((item) => {
-      const itemStatus = item.dataset.status;
-
-      const cocok =
-        status === "" || itemStatus === status;
-
-      item.style.display = cocok ? "flex" : "none";
-    });
-  }
-});
-</script>
-</script>
-
+<script src="<?= asset("js/ui.js") ?>"></script>
 </body>
 </html>
